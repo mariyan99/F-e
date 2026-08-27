@@ -61,21 +61,24 @@ Docker образи по digest, не по таг.
 
 | Компонент | Pin | Бележка |
 |---|---|---|
-| Node.js | **22.x LTS**, фиксиран в `.nvmrc` и `engines` | не мигрираме към 24 преди пълния launch |
-| pnpm | точна версия през `packageManager` + corepack | |
-| TypeScript | 5.x, точна | `strict: true`, `noUncheckedIndexedAccess: true` |
-| Medusa | **точната стабилна 2.x към деня на init** | всички `@medusajs/*` пакети на една и съща версия |
-| Next.js | **15.x, точна** | без canary |
-| React / React DOM | **19.x, точна** | |
-| Payload | **3.x, точна** + `@payloadcms/db-postgres` от същата версия | |
-| Tailwind CSS | **4.x, точна** | |
-| PostgreSQL | **16.x** | managed; 17 чак след пълния launch |
+| Node.js | **22.22.2**, фиксиран в `.nvmrc` и `engines` | не мигрираме към 24 преди пълния launch |
+| pnpm | **10.33.0** през `packageManager` + corepack | |
+| TypeScript | **5.9.3** | `strict: true`, `noUncheckedIndexedAccess: true`. 7.x е друг компилатор — не по време на замразяване |
+| Medusa | **2.19.0** | всички `@medusajs/*` пакети на една и съща версия |
+| Next.js | **15.4.11, точна** | не 15.5.x — `@payloadcms/next` изрично изключва цялата 15.5 линия |
+| React / React DOM | **19.2.8** витрина · **18.3.1** backend | админът на Medusa е правен за React 18; двете дървета са изолирани |
+| Payload | **3.88.0** + всички `@payloadcms/*` на същата версия | |
+| Tailwind CSS | **4.3.3** | CSS-first конфигурация, без `tailwind.config.js` |
+| PostgreSQL | **16.10** | managed; 17 чак след пълния launch |
 | Redis / Valkey | **7.2.x** | |
-| Meilisearch | **1.x**, точен minor | индексът се реиндексира при смяна на minor |
+| Meilisearch | **1.24** | индексът се реиндексира при смяна на minor |
 | Stripe SDK | точна версия + **pinned API version** (`apiVersion: "YYYY-MM-DD"`) | API версията се фиксира в кода, не се наследява от акаунта |
 
-**Как се фиксират точните числа:** на ден 1, при `pnpm create`, записваме реалните инсталирани версии
-в `docs/VERSIONS.md` и в лока. Никой не ъпгрейдва след това без отделно решение.
+Липсва в таблицата, но е задължително: **MikroORM 6.6.14** — точно версията, която Medusa 2.19 носи
+вътрешно. MikroORM отказва да стартира, ако собствените му пакети са с различни версии.
+
+**Записано е в [docs/VERSIONS.md](../VERSIONS.md)**, заедно с причините зад всяко ограничение — всяко
+от тях е открито от нещо, което се счупи, не от предпочитание. Никой не ъпгрейдва без отделно решение.
 
 ### Политика за ъпдейти
 

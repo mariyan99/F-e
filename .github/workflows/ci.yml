@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22.22.2"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16.10-alpine
+        env:
+          POSTGRES_USER: fabrizia
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: fabrizia_commerce
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fabrizia"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: valkey/valkey:7.2-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Create the CMS database
+        run: PGPASSWORD=ci psql -h localhost -U fabrizia -d postgres -c "CREATE DATABASE fabrizia_cms;"
+
+      - name: Write CI environment
+        run: |
+          cat > apps/backend/.env <<'ENV'
+          NODE_ENV=test
+          DATABASE_URL=postgres://fabrizia:ci@localhost:5432/fabrizia_commerce
+          REDIS_URL=redis://localhost:6379
+          JWT_SECRET=ci-only-not-a-real-secret
+          COOKIE_SECRET=ci-only-not-a-real-secret
+          ENV
+          cat > apps/storefront/.env <<'ENV'
+          NODE_ENV=test
+          DATABASE_URI=postgres://fabrizia:ci@localhost:5432/fabrizia_cms
+          PAYLOAD_SECRET=ci-only-not-a-real-secret
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+          NEXT_PUBLIC_SITE_URL=http://localhost:8000
+          NEXT_PUBLIC_ALLOW_INDEXING=false
+          ENV
+
+      # Secrets must never reach the repository (task SEC-01).
+      - name: Scan for leaked secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build shared package
+        run: pnpm --filter @fabrizia/shared build
+
+      - name: Unit tests
+        run: pnpm --filter @fabrizia/shared test
+
+      - name: Migrate
+        run: |
+          pnpm --filter @fabrizia/backend migrate
+          pnpm --filter @fabrizia/storefront payload:migrate
+
+      - name: Generate CMS types
+        run: pnpm --filter @fabrizia/storefront generate:types
+
+      # A drifted payload-types.ts means someone changed a collection without
+      # regenerating; the storefront would typecheck against a stale schema.
+      - name: Fail if generated types drifted
+        run: git diff --exit-code apps/storefront/src/payload-types.ts
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Build
+        run: |
+          pnpm --filter @fabrizia/backend build
+          pnpm --filter @fabrizia/storefront build
