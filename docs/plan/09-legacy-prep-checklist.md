@@ -50,7 +50,7 @@ grep -rniE "password|passwd|pwd|secret|api[_-]?key|token|smtp|private[_-]?key|BE
 ```php
 // ПРЕДИ
 define('DB_PASSWORD', 'r3alPassw0rd!');
-$stripe_key = 'sk_live_51Abc...';
+$stripe_key = 'sk_live_<РЕАЛНИЯТ_КЛЮЧ>';
 
 // СЛЕД
 define('DB_PASSWORD', '***REMOVED***');

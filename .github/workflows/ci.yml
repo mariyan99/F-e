@@ -37,6 +37,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # gitleaks diffs the PR's commit range; the default shallow clone
+          # does not contain it and the scan dies on "unknown revision".
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
