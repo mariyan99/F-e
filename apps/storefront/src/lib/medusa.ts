@@ -3,9 +3,22 @@ import Medusa from "@medusajs/js-sdk";
 const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000";
 const publishableKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ?? "";
 
-if (!publishableKey && process.env.NODE_ENV === "production") {
-  throw new Error(
-    "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY is missing. Run `pnpm seed` and copy the printed key.",
+let warnedAboutMissingKey = false;
+
+/**
+ * A missing key is a configuration problem, not a build problem.
+ *
+ * Throwing at module scope broke `next build`: it imports every route to
+ * collect page data long before any request exists, so a credential that only
+ * matters at runtime took the whole build down. Warn on first use instead —
+ * the catalogue then comes back empty with the reason in the logs.
+ */
+function warnIfKeyMissing(): void {
+  if (publishableKey || warnedAboutMissingKey) return;
+  warnedAboutMissingKey = true;
+  console.error(
+    "[medusa] NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY is not set — the catalogue will be empty. " +
+      "Run `pnpm seed` and copy the printed key into apps/storefront/.env.",
   );
 }
 
@@ -29,6 +42,8 @@ let regionPromise: Promise<string | null> | null = null;
  * no prices) instead of 500-ing.
  */
 export async function getRegionId(): Promise<string | null> {
+  warnIfKeyMissing();
+
   regionPromise ??= medusa.store.region
     .list({}, { next: { tags: ["regions"] } })
     .then(({ regions }) => {
@@ -58,6 +73,7 @@ export async function listProducts(params: {
   handles?: string[];
 } = {}): Promise<StoreProduct[]> {
   const { limit = 8, handles } = params;
+  warnIfKeyMissing();
 
   try {
     const regionId = await getRegionId();
@@ -87,6 +103,8 @@ export async function listProducts(params: {
 }
 
 export async function getProductByHandle(handle: string): Promise<StoreProduct | null> {
+  warnIfKeyMissing();
+
   try {
     const regionId = await getRegionId();
     const { products } = await medusa.store.product.list(
