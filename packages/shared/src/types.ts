@@ -54,15 +54,21 @@ export type ShippingDestination = "office" | "automat" | "address";
 export type PaymentMethod = "cod" | "card" | "bank_transfer";
 
 /**
- * Inventory is three numbers, never one. `available` is what the customer sees;
- * it is derived, never stored independently. Task INV-01.
+ * Inventory is four numbers, never one. Task INV-01.
+ *
+ * `available` is what the system believes exists. `sellable` is what the
+ * customer is allowed to buy — `available` minus a safety buffer, because
+ * wholesale movements are recorded by hand and the two drift apart. Nothing
+ * customer-facing may read `available`.
  */
 export interface InventoryLevel {
   onHand: number;
   reserved: number;
   /** onHand − reserved. Never negative. */
   available: number;
-  lowStockThreshold: number;
+  /** available − safety buffer. What the storefront is allowed to promise. */
+  sellable: number;
+  safetyBuffer: number;
 }
 
 export function computeAvailable(onHand: number, reserved: number): number {
@@ -91,9 +97,11 @@ export const FINANCE_EVENTS = [
 
 export type FinanceEvent = (typeof FINANCE_EVENTS)[number];
 
-/** Base currency is EUR. BGN appears alongside it only while dual display is required. */
+/**
+ * EUR is the only currency shown to customers.
+ *
+ * Dual EUR/BGN display was considered and dropped: one currency makes the
+ * checkout summary unambiguous. Reintroduce it only if the accountant requires
+ * it, and then as a display concern — never as a second stored price.
+ */
 export const BASE_CURRENCY = "eur" as const;
-export const DUAL_DISPLAY_CURRENCY = "bgn" as const;
-
-/** Fixed conversion rate used for informational BGN display. */
-export const BGN_PER_EUR = 1.95583;

@@ -1,4 +1,11 @@
-import { parseSku, styleGroupCode } from "@fabrizia/shared";
+import {
+  COD_FEE_EUR,
+  FREE_SHIPPING_THRESHOLD_EUR,
+  INSPECTION_ALLOWED,
+  parseSku,
+  RETURN_WINDOW_DAYS,
+  styleGroupCode,
+} from "@fabrizia/shared";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -100,8 +107,17 @@ export default async function ProductPage({ params }: Props) {
         ) : null}
 
         <div className="mt-6 border-t border-rule pt-6 text-sm text-muted">
-          <p>Доставка с Еконт и Спиди до офис, автомат или адрес.</p>
-          <p className="mt-1">14 дни право на отказ.</p>
+          <p>Доставка с Еконт до офис, автомат или адрес.</p>
+          <p className="mt-1">
+            Безплатна доставка над {FREE_SHIPPING_THRESHOLD_EUR} €. Наложен платеж — такса{" "}
+            {COD_FEE_EUR.toFixed(2).replace(".", ",")} €.
+          </p>
+          {INSPECTION_ALLOWED ? (
+            <p className="mt-1 text-ink">Може да прегледаш и пробваш пратката преди да платиш.</p>
+          ) : null}
+          <p className="mt-1">
+            {RETURN_WINDOW_DAYS} дни право на отказ. Обратната доставка е за сметка на клиента.
+          </p>
         </div>
       </div>
     </article>

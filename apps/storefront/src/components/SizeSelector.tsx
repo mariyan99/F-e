@@ -1,5 +1,6 @@
 "use client";
 
+import { LOW_STOCK_THRESHOLD } from "@fabrizia/shared";
 import { useEffect, useState } from "react";
 
 type Variant = { id: string; title: string; sku: string | null };
@@ -11,7 +12,8 @@ type Availability = Record<string, number>;
  *
  * A statically rendered page that claims a sold-out size is in stock costs an
  * order, a refund and a customer — so the page ships a skeleton and the real
- * numbers arrive a moment later (task PDP-08).
+ * numbers arrive a moment later (task PDP-08). What arrives is the *sellable*
+ * count, already reduced by the safety buffer (decision O-5).
  */
 export function SizeSelector({ productId, variants }: { productId: string; variants: Variant[] }) {
   const [availability, setAvailability] = useState<Availability | null>(null);
@@ -56,7 +58,7 @@ export function SizeSelector({ productId, variants }: { productId: string; varia
         {variants.map((variant) => {
           const stock = stockFor(variant.id);
           const soldOut = stock === 0;
-          const low = stock !== undefined && stock > 0 && stock <= 2;
+          const low = stock !== undefined && stock > 0 && stock < LOW_STOCK_THRESHOLD;
 
           return (
             <button

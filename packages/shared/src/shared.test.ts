@@ -3,6 +3,12 @@ import { test } from "node:test";
 
 import { buildSku, isValidSku, parseSku, styleGroupCode } from "./sku.js";
 import { searchKeys, slugify, transliterate, uniqueSlug } from "./slug.js";
+import {
+  amountToFreeShippingEur,
+  computeSellable,
+  shippingCostEur,
+  STOCK_SAFETY_BUFFER,
+} from "./commerce.js";
 import { computeAvailable } from "./types.js";
 
 test("transliterates Bulgarian Cyrillic using the Streamlined System", () => {
@@ -52,4 +58,32 @@ test("styleGroupCode drops the colour and size", () => {
 test("available stock never goes negative", () => {
   assert.equal(computeAvailable(5, 2), 3);
   assert.equal(computeAvailable(2, 5), 0);
+});
+
+test("the safety buffer keeps the last units off the storefront", () => {
+  // Wholesale movements are written up by hand, so the recorded quantity runs
+  // ahead of the shelf. The buffer absorbs that drift.
+  assert.equal(computeSellable(5), 3);
+  assert.equal(computeSellable(2), 0);
+  assert.equal(computeSellable(0), 0);
+  assert.equal(STOCK_SAFETY_BUFFER, 2);
+});
+
+test("the safety buffer is overridable per variant and never negative", () => {
+  assert.equal(computeSellable(10, 0), 10);
+  assert.equal(computeSellable(10, 4), 6);
+  assert.equal(computeSellable(3, 99), 0);
+  assert.equal(computeSellable(3, -5), 3);
+});
+
+test("shipping is free at the threshold, not merely above it", () => {
+  assert.equal(shippingCostEur(88.99, 4.9), 4.9);
+  assert.equal(shippingCostEur(89, 4.9), 0);
+  assert.equal(shippingCostEur(120, 4.9), 0);
+});
+
+test("the free-shipping nudge reaches zero and stops there", () => {
+  assert.equal(amountToFreeShippingEur(70), 19);
+  assert.equal(amountToFreeShippingEur(89), 0);
+  assert.equal(amountToFreeShippingEur(200), 0);
 });

@@ -1,3 +1,4 @@
+import { computeSellable, STOCK_SAFETY_BUFFER } from "@fabrizia/shared";
 import { NextResponse } from "next/server";
 
 import { medusa } from "@/lib/medusa";
@@ -5,8 +6,13 @@ import { medusa } from "@/lib/medusa";
 export const dynamic = "force-dynamic";
 
 /**
- * Live stock per variant, deliberately uncached — this is the one thing the
- * static product page must never remember (task PDP-08).
+ * Live sellable stock per variant, deliberately uncached — this is the one
+ * thing the static product page must never remember (task PDP-08).
+ *
+ * What goes out is `sellable`, never the raw quantity: wholesale movements are
+ * recorded by hand and do not decrement stock, so the recorded number runs
+ * ahead of the shelf. Holding back a safety buffer means that drift produces a
+ * missed sale instead of an order for goods that are not there (decision O-5).
  */
 export async function GET(request: Request): Promise<NextResponse> {
   const productId = new URL(request.url).searchParams.get("productId");
@@ -22,13 +28,16 @@ export async function GET(request: Request): Promise<NextResponse> {
     const availability: Record<string, number> = {};
     for (const variant of product.variants ?? []) {
       // A variant that does not manage inventory is always purchasable.
-      availability[variant.id] = variant.manage_inventory
-        ? Math.max(0, variant.inventory_quantity ?? 0)
-        : Number.MAX_SAFE_INTEGER;
+      if (!variant.manage_inventory) {
+        availability[variant.id] = Number.MAX_SAFE_INTEGER;
+        continue;
+      }
+      const onHand = Math.max(0, variant.inventory_quantity ?? 0);
+      availability[variant.id] = computeSellable(onHand);
     }
 
     return NextResponse.json(
-      { availability },
+      { availability, safetyBuffer: STOCK_SAFETY_BUFFER },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

@@ -1,4 +1,10 @@
-import { buildSku, slugify, styleGroupCode, type ColourCode } from "@fabrizia/shared";
+import {
+  buildSku,
+  slugify,
+  STOCK_SAFETY_BUFFER,
+  styleGroupCode,
+  type ColourCode,
+} from "@fabrizia/shared";
 import type { ExecArgs } from "@medusajs/framework/types";
 import {
   ContainerRegistrationKeys,
@@ -7,6 +13,7 @@ import {
 } from "@medusajs/framework/utils";
 import {
   createApiKeysWorkflow,
+  createInventoryLevelsWorkflow,
   createProductCategoriesWorkflow,
   createProductsWorkflow,
   createRegionsWorkflow,
@@ -31,6 +38,9 @@ import type StyleGroupModuleService from "../modules/style-group/service";
  *
  *   pnpm seed
  */
+
+/** Enough that the safety buffer still leaves something buyable. */
+const OPENING_STOCK_PER_VARIANT = 5;
 
 const COUNTRY = "bg";
 const CURRENCY = "eur";
@@ -119,16 +129,13 @@ export default async function seed({ container }: ExecArgs): Promise<void> {
       input: {
         selector: { id: store.id },
         update: {
-          supported_currencies: [
-            { currency_code: CURRENCY, is_default: true },
-            // BGN stays listed while dual display is required (decision O-8).
-            { currency_code: "bgn" },
-          ],
+          // EUR only: BGN is not shown to customers (decision O-8).
+          supported_currencies: [{ currency_code: CURRENCY, is_default: true }],
           default_sales_channel_id: webChannel.id,
         },
       },
     });
-    logger.info("  store currency set to EUR (BGN kept for dual display)");
+    logger.info("  store currency set to EUR");
   }
 
   // --- region + tax -------------------------------------------------------
@@ -170,6 +177,7 @@ export default async function seed({ container }: ExecArgs): Promise<void> {
     fields: ["id", "name"],
     filters: { name: "Склад София" },
   });
+  let stockLocationId = existingLocations[0]?.id;
 
   if (existingLocations.length === 0) {
     const { result: locations } = await createStockLocationsWorkflow(container).run({
@@ -183,6 +191,7 @@ export default async function seed({ container }: ExecArgs): Promise<void> {
       },
     });
     const location = locations[0]!;
+    stockLocationId = location.id;
 
     await linkSalesChannelsToStockLocationWorkflow(container).run({
       input: { id: location.id, add: [webChannel.id] },
@@ -300,6 +309,39 @@ export default async function seed({ container }: ExecArgs): Promise<void> {
     );
 
     logger.info(`  created ${code} "${design.title}" in ${products.length} colours`);
+  }
+
+  // --- opening stock ------------------------------------------------------
+  // Without inventory levels every variant reads zero and the whole catalogue
+  // shows as sold out — which is exactly what a developer running this for the
+  // first time must not see.
+  if (stockLocationId) {
+    const { data: inventoryItems } = await query.graph({
+      entity: "inventory_item",
+      fields: ["id", "sku", "location_levels.id"],
+    });
+
+    const missingLevels = inventoryItems.filter(
+      (item: { location_levels?: unknown[] }) => (item.location_levels ?? []).length === 0,
+    );
+
+    if (missingLevels.length > 0) {
+      await createInventoryLevelsWorkflow(container).run({
+        input: {
+          inventory_levels: missingLevels.map((item: { id: string }) => ({
+            inventory_item_id: item.id,
+            location_id: stockLocationId as string,
+            stocked_quantity: OPENING_STOCK_PER_VARIANT,
+          })),
+        },
+      });
+      logger.info(
+        `  stocked ${missingLevels.length} variants with ${OPENING_STOCK_PER_VARIANT} units each`,
+      );
+      logger.info(
+        `  the storefront will show ${OPENING_STOCK_PER_VARIANT - STOCK_SAFETY_BUFFER} — the safety buffer holds back ${STOCK_SAFETY_BUFFER} (decision O-5)`,
+      );
+    }
   }
 
   logger.info("");
