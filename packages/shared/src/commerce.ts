@@ -34,8 +34,9 @@ export const INSPECTION_ALLOWED = true;
  * quantity drifts above the real one. A buffer means the drift eats the buffer
  * instead of producing an order for goods that are not on the shelf.
  *
- * Two units is the launch value. Lower it only once daily reconciliation shows
- * the recorded and counted quantities agreeing.
+ * Two units is the launch value, confirmed by the owner on 27.08.2026. Lower it
+ * only once daily reconciliation shows the recorded and counted quantities
+ * agreeing — and treat that as a decision, not a tweak.
  */
 export const STOCK_SAFETY_BUFFER = 2;
 
