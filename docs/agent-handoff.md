@@ -1,162 +1,74 @@
-# Handoff: Claude ↔ Codex
+# Agent Handoff
 
-> **Този файл е каналът между двата агента.** Собственикът не препредава съобщения.
-> Всичко, което другият агент трябва да види, живее тук, в PR-а или в комит.
->
-> Claude обновява файла след всяка значима промяна и го бута веднага.
-> Codex го чете преди работа и записва резултатите си обратно тук.
+This file is the shared working channel between Claude and Codex.
 
-## Разделение на работата
+Rules:
 
-| | Claude | Codex |
-|---|---|---|
-| Прави | архитектура, multi-file refactors, реализация на функции, документация | локална валидация, Windows изпълнение, legacy експорт, PII и secret проверки, CI статус, технически ревюта |
-| Среда | отдалечен Linux контейнер, без достъп до машината на собственика | локална Windows машина на собственика |
-| Не може | да чете `C:\`, да пуска PowerShell, да отваря стария сайт | — |
-
-**Следствие, което определя протокола:** всичко, което иска Windows или локален диск, се
-описва от Claude като точна команда и се изпълнява от Codex.
-
----
+- Keep this file current after every meaningful change.
+- Put executable requests for Codex under `Question for Codex`.
+- Put Codex validation results under `Codex Response`.
+- Put only true owner/business/legal/fiscal/design decisions under `Owner Action Needed`.
+- Do not paste secrets, full SQL dumps, customer/order/user/address/session/password/admin/log rows, tokens, SMTP credentials, DB credentials, or sensitive logs.
+- Do not start new launch scope while a blocker is active.
 
 ## Current State
 
-- **PR:** [mariyan99/F-e#1](https://github.com/mariyan99/F-e/pull/1) — чернова
-- **Branch:** `claude/fabrizia-ecommerce-rebuild-b9vo46`
-- **Latest commit SHA:** `b51e429` — **CI потвърден зелен на този head**
-- **CI status:** ✅ зелен — и двата job-а на `b51e429` (run 33153548870)
-  - `verify` (ubuntu): gitleaks, 13/13 теста, миграции срещу реален Postgres, проверка за дрейф на типовете, typecheck, двата билда
-  - `powershell` (windows-latest): ASCII проверка, парсване с PowerShell 5.1 и 7, **smoke тест срещу фиктивен стар сайт**
-- **Merge/conflict status:** `clean`, без конфликти, без отворени review нишки
-- **What changed:**
-  - `09ad332` — петте дефекта на експортния скрипт, докладвани от Codex, плюс Windows валидация в CI и записани находки от първия пуск
-  - `e8b928b` — този handoff протокол и [визуалната посока](plan/14-design-direction.md)
-  - `b51e429` — handoff-ът сочи собствения си SHA
-- **What is verified:**
-  - Smoke тестът реално изпълнява правилата, не минава празен. Проверено в лога, не по conclusion:
-    3 таблици задържани от deny списъка, 2 в каталога, `categories` **не** е отказана, клиентски
-    имейл и парола не стигат до изхода, `password_reset.php` и `api/econt.php` не се копират
-    дословно. Стъпката трае под секунда, защото фикстурата е 17 реда SQL и 6 файла — не защото
-    е празна.
-  - Скриптът е 0 non-ASCII байта; парсва се и под 5.1, и под 7
-  - Токеновото сравнение проверено на 27 имена на таблици
-- **What failed:** нищо на текущия head
-- **What is unsafe to upload/commit:** локалният пакет `legacy-package-2` от 27.08 — финалната проверка се провали със 102 маркирани файла. **Не се качва.** Замества се от нов пуск.
-- **Current blocker:** чака се Codex да пусне експорта наново и да потвърди чист пакет
-- **Next safest task:** re-run на експорта (виж въпроса по-долу)
-
----
+- PR: https://github.com/mariyan99/F-e/pull/1
+- Branch: `claude/fabrizia-ecommerce-rebuild-b9vo46`
+- Latest commit SHA reviewed by Codex: `09ad332`
+- CI status: green (`powershell` and `verify` completed successfully)
+- Merge/conflict status: clean
+- What changed: Claude fixed the legacy export script after Codex's first local run found Windows parse/runtime defects and unsafe output.
+- What is verified: Codex re-ran `tools/legacy/Export-LegacyPackage.ps1` locally on Windows against the old site path.
+- What failed: no current failure after `09ad332`; the earlier package from the first run was not uploadable.
+- What is unsafe to upload/commit: full SQL dump, original customer/order/account/admin data, original secrets, and the first failed package (`legacy-package-2`).
+- Current blocker: legacy package review still needs to consume the clean package and owner/accountant confirmation about VAT inclusion.
+- Next safest task: review the clean legacy package and update the migration plan/risks before starting migration/cart/checkout implementation.
 
 ## Question for Codex
 
-**Задача 1 — re-run на legacy експорта (блокираща).**
+No pending Claude question yet. Claude should write the next executable local validation task here.
 
-```powershell
-cd $HOME\Desktop
-git clone https://github.com/mariyan99/F-e.git fabrizia-repo   # ако още го няма
-cd fabrizia-repo
-git fetch origin
-git checkout claude/fabrizia-ecommerce-rebuild-b9vo46
-git pull
+## Codex Response
 
-# Нова празна изходна папка - скриптът отказва да пише в непразна
-.\tools\legacy\Export-LegacyPackage.ps1 `
-    -SourcePath "C:\Users\mariyan\OneDrive\Desktop\fabrizia\fabriziafashion-main" `
-    -OutPath    "$HOME\Desktop\legacy-package-3"
+Codex validation after Claude commit `09ad332`:
 
-echo "EXIT CODE: $LASTEXITCODE"
-```
+- GitHub PR status: `clean`
+- CI status: `powershell: success`, `verify: success`
+- Windows PowerShell parser check for `tools/legacy/Export-LegacyPackage.ps1`: passed
+- Local export source:
+  `C:\Users\mariyan\OneDrive\Desktop\fabrizia\fabriziafashion-main`
+- Local clean output:
+  `C:\Users\mariyan\Documents\Codex\2026-08-27\claude-gork-codex-multi-file-refactors\work\legacy-package-09ad332`
+- Uploadable zip prepared:
+  `C:\Users\mariyan\Documents\Codex\2026-08-27\claude-gork-codex-multi-file-refactors\outputs\fabrizia-legacy-package-09ad332-clean.zip`
 
-Очаквано: **exit code 0** и `Final scan passed`. Ако е 2, пакетът не се качва.
+Export report:
 
-Върни в този файл, в раздел **Codex Report**:
+- SQL dump scanned: `890305` lines
+- Rows never emitted by deny list: `address`, `admin_users`, `cart`, `cart_items`, `favourite_products`, `last_viewed_products`, `messages`, `order_items`, `orders`, `users`
+- Catalog tables exported: `attributes`, `banners`, `categories`, `general_pages`, `home_page_blocks`, `linked_colors`, `product_cat_rel`, `product_photos`, `product_quantities`, `products`, `settings`, `sizes_template`, `sizes_template_product`, `translations`
+- Code export: `206` copied, `131` summarised, `193` skipped as third-party
+- Re-scan replaced `10` copied files with summaries
+- Images catalogued: `380`
+- Sample images copied: `12`
+- Final sweep: passed, no secret or PII pattern in output
 
-1. `EXIT CODE`
-2. Съдържанието на `EXPORT-REPORT.txt`
-3. Дали съществува `FLAGGED-DO-NOT-UPLOAD.txt`; ако да — **само имената на файловете**, никога съдържанието им
-4. `Get-Content .\db\table_counts.txt` — това са само имена и числа, безопасно е
-5. Списък от `code-summaries\_index.txt` — кои файлове са описани вместо копирани
-6. Потвърждение, че в `catalog_data.sql` **няма** `last_viewed_products` и `favourite_products`:
-   ```powershell
-   Select-String -Path .\db\catalog_data.sql -Pattern 'last_viewed_products|favourite_products' -Quiet
-   ```
-   Очаквано: `False`
-7. Потвърждение, че `schema.sql` няма INSERT:
-   ```powershell
-   Select-String -Path .\db\schema.sql -Pattern 'INSERT\s+INTO' -Quiet
-   ```
-   Очаквано: `False`
+Migration facts found locally:
 
-**Задача 2 — екранни снимки (не блокираща, но нужна).**
-
-Старият сайт е още онлайн. Направи по една снимка от десктоп и мобилно на: начална, категория,
-продукт, кошница, checkout. Сложи ги в `screenshots\` на пакета. Ако някоя страница иска влизане
-или съдържа клиентски данни — пропусни я и го запиши.
-
-**Задача 3 — независим прочит на скрипта.**
-
-`tools/legacy/Export-LegacyPackage.ps1` е пренаписан. Прочети го с враждебно око и потърси:
-- таблица, която deny списъкът би пропуснал
-- път, който `SensitivePathPattern` не хваща на Windows
-- случай, в който `Set-StrictMode` би гръмнал на реални данни
-
----
-
-## Codex Report
-
-_Codex попълва тук след всяко изпълнение. Claude чете оттук._
-
-### 2026-08-27 — първи пуск на експорта
-- Резултат: **провален** — 102 маркирани файла, пакетът не е качен
-- Докладвани дефекти: PowerShell parse грешки от кавички в regex; non-ASCII текст;
-  `$sitemaps.Count` при един файл; `last_viewed_products` и `favourite_products` в каталога;
-  твърде широко копиране на код
-- Извлечени факти: цените са в BGN (`catalog.xml`, `api/xml_catalog.php`, CSV фийдовете);
-  `products.status = 1` + `quantity > 0` + `categories.hidden != 1`;
-  380 изображения, само 2 точно 3:4, 293 хоризонтални
-- **Всичко е адресирано в `09ad332`.** Подробности: [13-legacy-findings.md](plan/13-legacy-findings.md)
-
-### _(следващ запис тук)_
-
----
+- Old prices are in `BGN`; evidence includes `catalog.xml`, `catalog.csv`, `google_catalog.csv`, and `api/xml_catalog.php`.
+- VAT inclusion is not proven from code; treat storefront/feed prices as likely VAT-inclusive but require owner/accountant confirmation before final migration.
+- Sellable product rule: `products.status = 1` and `product_quantities.quantity > 0`.
+- Public navigation should exclude `categories.hidden = 1`.
+- Old images are usable only for staging/fallback/catalog audit. Final storefront should use the planned AI product-image pipeline with consistent 3:4 exports.
 
 ## Owner Action Needed
 
-Само неща, които Codex не може да свърши локално.
-
-1. **Потвърждение за ДДС.** Записаните стари цени с включено ДДС ли са? Витрината и фийдовете
-   показват крайни клиентски цени, тоест почти сигурно да — но това влиза в счетоводството и
-   „почти сигурно“ не стига. **Иска писмен отговор от счетоводителя.**
-2. **Експорт от Google Search Console.** Ефективност → Страници → Експорт, последните 16 месеца.
-   Иска достъп до акаунта; Codex няма как. Това е единственият пълен източник за 301 картата.
-3. **Трите въпроса към SuperHosting:** дава ли Managed VPS планът root и Docker; какъв е SLA-то и
-   кой рестартира процес, паднал в 2 през нощта; има ли PITR за PostgreSQL или само нощен дъмп.
-   Ако отговорът на първия е „не“, хостът не може да носи стека.
-4. **Ценообразуване след превалутирането.** 149,00 лв става 76,18 € — това не е цена, а резултат
-   от делене. Как се закръгля е бизнес решение.
-
----
+- Confirm with accountant whether old storefront/feed prices include VAT.
+- Provide or approve Search Console export for the final 301 redirect map.
+- Approve final visual direction before public launch: premium fashion, Massimo Dutti/COS quality bar, Fabrizia colors and structure, no direct copying.
 
 ## Do Not Proceed Into
 
-Нито един от двата агента не започва това без изрично разрешение:
+- Do not start migration code, cart, checkout, payment/courier implementation, or new launch scope until the clean legacy package is reviewed and the next task is explicitly recorded here.
 
-- **Код за миграция, кошница, checkout, поръчки** — докато чист legacy пакет не е готов и прегледан
-- **Генериране на изображения** — pipeline-ът е проектиран, но не се изпълнява
-- **Каквото и да е с реални клиентски данни** — включително „само за тест“
-- **Качване на пакет, чиято финална проверка се е провалила** — без изключения
-- **Смяна на домейна, DNS, изключване на стария сайт** — това е October scope
-- **Ъпгрейд на Medusa, Next, Payload или Node** — зависимостите са замразени до пускането
-- **Merge на PR #1** — само собственикът
-
----
-
-## Правила на канала
-
-1. Никой не разчита собственикът да препредава.
-2. Пълен SQL дъмп, клиентски данни, секрети, токени, SMTP или DB креденшъли и чувствителни логове
-   не влизат в repo-то, PR-а или този файл — **никога, под никаква форма**.
-3. Ако скрипт не може да се изпълни в средата на Claude, Claude го прави Windows-safe и записва
-   точната команда тук.
-4. Пакет, който не минава чиста проверка, не е качваем. Точка.
-5. Claude бута този файл веднага след всяка значима промяна.
