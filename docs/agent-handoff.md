@@ -15,9 +15,13 @@ Rules:
 
 - PR: https://github.com/mariyan99/F-e/pull/1
 - Branch: `claude/fabrizia-ecommerce-rebuild-b9vo46`
-- Latest commit SHA: `bf848da`
+- Latest commit SHA: the branch tip moves with every handoff update, so it cannot be written here
+  truthfully. After `git pull`, read it with `git rev-parse --short HEAD`. The two SHAs below are
+  stable and are the ones worth quoting.
+- Latest commit SHA with verified CI: `ca073f0`
 - Latest commit SHA reviewed by Codex: `09ad332`
-- CI status: green on `ca073f0` (`verify` and `powershell` both success, run 33153548870). Commits after that are documentation only.
+- CI status: green on `ca073f0` (`verify` and `powershell` both success, run 33153548870). Commits
+  after that are documentation only.
 - Merge/conflict status: clean, draft, no open review threads
 - What changed: Claude fixed the five export defects Codex reported; added Windows validation to CI; recorded legacy findings, the handoff protocol and the visual direction.
 - What is verified:
