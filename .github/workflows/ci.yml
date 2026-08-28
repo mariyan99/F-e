@@ -178,6 +178,21 @@ jobs:
           INSERT INTO `last_viewed_products` VALUES (1,'sess-abc',1);
           CREATE TABLE `favourite_products` (`id` int(11), `user_id` int(11)) ENGINE=InnoDB;
           INSERT INTO `favourite_products` VALUES (1,7);
+          CREATE TABLE `product_quantities` (`id` int(12), `product_id` int(12), `size` int(3), `quantity` int(8)) ENGINE=InnoDB;
+          INSERT INTO `product_quantities` VALUES
+          (1,1,1,4),
+          (2,1,2,7),
+          (3,2,1,0),
+          (4,2,2,11),
+          (5,2,3,3);
+          CREATE TABLE `orders` (`id` int(11), `customer_email` varchar(255), `total` varchar(20)) ENGINE=InnoDB;
+          INSERT INTO `orders` VALUES
+          (1,'kupuvach@example.com','120.00'),
+          (2,'vtori.klient@example.com','89.90');
+          CREATE TABLE `settings` (`id` int(11), `name` varchar(64), `value` varchar(255)) ENGINE=InnoDB;
+          INSERT INTO `settings` VALUES (1,'currency','BGN');
+          INSERT INTO `settings` VALUES
+          (2,'contact','magazin.klient@example.com');
           '@ | Set-Content "$src\db\dump.sql" -Encoding UTF8
 
           '<?php define("DB_PASSWORD", "hunter2super"); $smtp_pass = "s3cr3tmailpw";' |
@@ -205,14 +220,27 @@ jobs:
           if ($catalog -match 'favourite_products')   { Fail 'catalog_data.sql leaked favourite_products' }
           if ($catalog -match 'INSERT INTO `users`')  { Fail 'catalog_data.sql leaked users' }
           if ($catalog -notmatch 'categories')        { Fail 'categories was denied - the deny list is over-matching' }
+          
+          # Regression: an INSERT whose values sit on continuation lines. The first
+          # parser matched only the header, so it wrote headers with no rows and
+          # counted statements instead of rows.
+          if ($catalog -notmatch '\(1,1,1,4\)')       { Fail 'catalog_data.sql has INSERT headers but no row values' }
+          if ($catalog -notmatch '\(5,2,3,3\)')       { Fail 'catalog_data.sql dropped the last row of a multi-line INSERT' }
+          if ($catalog -match 'kupuvach@example\.com') { Fail 'a denied multi-line INSERT leaked its continuation lines' }
+          # settings passes the scan on its first statement and fails on its second.
+          # Both must be gone, not just the one that tripped it.
+          if ($catalog -match 'magazin\.klient@example\.com') { Fail 'a PII row survived in catalog_data.sql' }
+          if ($catalog -match "'currency'")                   { Fail 'the clean statement of a PII-blocked table was not purged' }
 
           $counts = Get-Content "$out\db\table_counts.txt" -Raw
           foreach ($t in 'users','products','last_viewed_products','favourite_products') {
             if ($counts -notmatch [regex]::Escape($t)) { Fail "table_counts.txt is missing $t" }
           }
+          if ($counts -notmatch 'product_quantities\s+5') { Fail 'multi-line INSERT rows were counted as statements, not rows' }
+          if ($counts -notmatch 'orders\s+2')             { Fail 'a denied multi-line INSERT was miscounted' }
 
           $leaks = @(Get-ChildItem $out -Recurse -File | Where-Object {
-            (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match 'ivan\.petrov@example\.com'
+            (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match 'ivan\.petrov@|kupuvach@|vtori\.klient@|magazin\.klient@'
           })
           if ($leaks.Count -gt 0) { Fail "customer email reached the output: $($leaks[0].FullName)" }
 
