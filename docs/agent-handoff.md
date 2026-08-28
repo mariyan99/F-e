@@ -18,10 +18,12 @@ Rules:
 - Latest commit SHA: the branch tip moves with every handoff update, so it cannot be written here
   truthfully. After `git pull`, read it with `git rev-parse --short HEAD`. The two SHAs below are
   stable and are the ones worth quoting.
-- Latest commit SHA with verified CI: `cd4db83`
+- Latest commit SHA with verified CI: `78dc1a8`
 - Latest commit SHA reviewed by Codex: `cd4db83`
-- CI status: green on `cd4db83` (`verify` and `powershell` both success, run 33154973334).
-  CI on the multi-line INSERT fix is running; it is not green until the log says so.
+- CI status: green on `78dc1a8` (`verify` and `powershell` both success, run 33155946094).
+  Verified from the Windows job log, not from the tick: the log shows `1 table(s) failed the PII
+  scan after partial export and were purged`, `4 tables held back by the deny list` and
+  `catalog_data.sql - 3 tables` - the new code paths ran under PowerShell 5.1.
 - Merge/conflict status: clean, draft, no open review threads
 - What changed: Claude fixed the multi-line INSERT defect Codex found in the export script,
   added three CI regressions for it, and wrote the ETL mapping proposal in
