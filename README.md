@@ -171,7 +171,8 @@ docs                планът, ADR-001 и фиксираните версии
 | [06 · MVP обхват](docs/plan/06-mvp-scope-softlaunch.md) | какво влиза, какво не, какво е опасно да се бута преди launch |
 | [07 · Backlog](docs/plan/07-backlog.md) | 14 епики, 144 задачи с ID и acceptance criteria |
 | [08 · Входни данни](docs/plan/08-inputs-required.md) | какво трябва да предостави бизнесът и до кога |
-| [09 · Стар сайт](docs/plan/09-legacy-prep-checklist.md) | чеклист за безопасно качване без ключове и лични данни |
+| [12 · Какво да качиш в /legacy](docs/plan/12-legacy-upload-instructions.md) | **Започни оттук.** Минимумът, какво да НЕ качваш, как да провериш за секрети |
+| [09 · Стар сайт](docs/plan/09-legacy-prep-checklist.md) | пълните команди зад документ 12 |
 | [VERSIONS](docs/VERSIONS.md) | фиксирани версии и ограниченията зад тях |
 
 ## Какво още го няма
