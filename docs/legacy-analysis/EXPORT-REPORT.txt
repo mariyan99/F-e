@@ -1,0 +1,7 @@
+﻿Fabrizia legacy export - 2026-08-28 10:57
+
+Rows never emitted (deny list): address, admin_users, cart, cart_items, favourite_products, last_viewed_products, messages, order_items, orders, users
+Catalogue tables exported: attributes, banners, categories, general_pages, home_page_blocks, linked_colors, product_cat_rel, product_photos, product_quantities, products, settings, sizes_template, sizes_template_product, translations
+Code: 206 copied, 131 summarised, 193 skipped as third-party.
+Replaced with summaries after the re-scan: 10 file(s).
+FINAL SCAN PASSED: no secret or PII pattern in the output.
