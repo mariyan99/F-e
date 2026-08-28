@@ -23,7 +23,7 @@
 
 - **PR:** [mariyan99/F-e#1](https://github.com/mariyan99/F-e/pull/1) — чернова
 - **Branch:** `claude/fabrizia-ecommerce-rebuild-b9vo46`
-- **Latest commit SHA:** `09ad332` (последният с потвърден CI; този handoff е документация върху него)
+- **Latest commit SHA:** `e8b928b` — документация върху `09ad332`, последният с потвърден CI
 - **CI status:** ✅ зелен — и двата job-а на `09ad332`
   - `verify` (ubuntu): gitleaks, 13/13 теста, миграции срещу реален Postgres, проверка за дрейф на типовете, typecheck, двата билда
   - `powershell` (windows-latest): ASCII проверка, парсване с PowerShell 5.1 и 7, **smoke тест срещу фиктивен стар сайт**
