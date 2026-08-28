@@ -1,0 +1,10 @@
+# One historical finding, pinned by fingerprint.
+#
+# docs/plan/09-legacy-prep-checklist.md teaches how to strip credentials out of
+# the old PHP site before uploading it, so it necessarily shows what a leaked
+# key looks like. The placeholder was replaced with <РЕАЛНИЯТ_КЛЮЧ> in the
+# working tree, but the earlier commit is immutable and gitleaks scans history.
+#
+# Scoped to that exact commit, file, rule and line — anything else still fails
+# the build. Never widen this to a path or a rule.
+2f9667d1961cdf976b2f8ce4f17a2838f9f85bd0:docs/plan/09-legacy-prep-checklist.md:generic-api-key:53

@@ -1,0 +1,28 @@
+# No-Docker path: the Next.js storefront (which also serves the Payload admin).
+[Unit]
+Description=Fabrizia storefront (Next.js + Payload)
+After=network-online.target postgresql.service fabrizia-backend.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=fabrizia
+WorkingDirectory=/srv/fabrizia/apps/storefront
+EnvironmentFile=/srv/fabrizia/infra/deploy/.env.storefront
+ExecStart=/usr/bin/npx next start -p 8000
+Restart=always
+RestartSec=5
+StartLimitBurst=0
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=fabrizia-storefront
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/fabrizia/apps/storefront/.next
+
+[Install]
+WantedBy=multi-user.target

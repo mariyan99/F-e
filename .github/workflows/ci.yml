@@ -1,0 +1,260 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22.22.2"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16.10-alpine
+        env:
+          POSTGRES_USER: fabrizia
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: fabrizia_commerce
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fabrizia"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      redis:
+        image: valkey/valkey:7.2-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks diffs the PR's commit range; the default shallow clone
+          # does not contain it and the scan dies on "unknown revision".
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Create the CMS database
+        run: PGPASSWORD=ci psql -h localhost -U fabrizia -d postgres -c "CREATE DATABASE fabrizia_cms;"
+
+      - name: Write CI environment
+        run: |
+          cat > apps/backend/.env <<'ENV'
+          NODE_ENV=test
+          DATABASE_URL=postgres://fabrizia:ci@localhost:5432/fabrizia_commerce
+          REDIS_URL=redis://localhost:6379
+          JWT_SECRET=ci-only-not-a-real-secret
+          COOKIE_SECRET=ci-only-not-a-real-secret
+          ENV
+          cat > apps/storefront/.env <<'ENV'
+          NODE_ENV=test
+          DATABASE_URI=postgres://fabrizia:ci@localhost:5432/fabrizia_cms
+          PAYLOAD_SECRET=ci-only-not-a-real-secret
+          NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://localhost:9000
+          NEXT_PUBLIC_SITE_URL=http://localhost:8000
+          NEXT_PUBLIC_ALLOW_INDEXING=false
+          ENV
+
+      # Secrets must never reach the repository (task SEC-01).
+      - name: Scan for leaked secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build shared package
+        run: pnpm --filter @fabrizia/shared build
+
+      - name: Unit tests
+        run: pnpm --filter @fabrizia/shared test
+
+      - name: Migrate
+        run: |
+          pnpm --filter @fabrizia/backend migrate
+          pnpm --filter @fabrizia/storefront payload:migrate
+
+      - name: Generate CMS types
+        run: pnpm --filter @fabrizia/storefront generate:types
+
+      # A drifted payload-types.ts means someone changed a collection without
+      # regenerating; the storefront would typecheck against a stale schema.
+      - name: Fail if generated types drifted
+        run: git diff --exit-code apps/storefront/src/payload-types.ts
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Build
+        run: |
+          pnpm --filter @fabrizia/backend build
+          pnpm --filter @fabrizia/storefront build
+
+  # The export script runs on the owner's Windows machine, so it is validated
+  # where it actually runs. The first release shipped with regex strings that
+  # terminated early and non-ASCII text that cascaded into parser errors -
+  # neither of which a Linux job would have caught.
+  powershell:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ASCII only
+        shell: pwsh
+        run: |
+          $file = 'tools/legacy/Export-LegacyPackage.ps1'
+          $bytes = [System.IO.File]::ReadAllBytes($file)
+          $bad = @($bytes | Where-Object { $_ -gt 127 })
+          if ($bad.Count -gt 0) {
+            Write-Host "::error file=$file::$($bad.Count) non-ASCII byte(s). Windows PowerShell 5.1 reads .ps1 as ANSI without a BOM and the parser cascades."
+            exit 1
+          }
+          Write-Host "ASCII clean"
+
+      - name: Parse with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'tools/legacy/Export-LegacyPackage.ps1').Path, [ref]$null, [ref]$errors) | Out-Null
+          if ($errors -and $errors.Count -gt 0) {
+            foreach ($e in $errors) { Write-Host "::error::$($e.Extent.StartLineNumber): $($e.Message)" }
+            exit 1
+          }
+          Write-Host "parses under Windows PowerShell $($PSVersionTable.PSVersion)"
+
+      - name: Parse with PowerShell 7
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'tools/legacy/Export-LegacyPackage.ps1').Path, [ref]$null, [ref]$errors) | Out-Null
+          if ($errors -and $errors.Count -gt 0) {
+            foreach ($e in $errors) { Write-Host "::error::$($e.Extent.StartLineNumber): $($e.Message)" }
+            exit 1
+          }
+          Write-Host "parses under PowerShell $($PSVersionTable.PSVersion)"
+
+      # Parsing proves the syntax. Only running it proves the safety rules.
+      - name: Smoke test against a fixture site
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $src = Join-Path $env:RUNNER_TEMP 'old-site'
+          $out = Join-Path $env:RUNNER_TEMP 'legacy-out'
+          New-Item -ItemType Directory -Force -Path "$src\db","$src\includes","$src\api","$src\vendor\phpmailer","$src\css" | Out-Null
+
+          @'
+          CREATE TABLE `users` (
+            `id` int(11) NOT NULL,
+            `email` varchar(255) NOT NULL
+          ) ENGINE=InnoDB;
+          INSERT INTO `users` VALUES (1,'ivan.petrov@example.com'),(2,'maria@example.com');
+          CREATE TABLE `products` (
+            `id` int(11) NOT NULL,
+            `name` varchar(255) NOT NULL,
+            `status` int(2) NOT NULL DEFAULT 1
+          ) ENGINE=InnoDB;
+          INSERT INTO `products` VALUES (1,'Rokla Elena',1),(2,'Pantalon Nora',1);
+          CREATE TABLE `categories` (`id` int(11) NOT NULL, `hidden` int(1) DEFAULT 0) ENGINE=InnoDB;
+          INSERT INTO `categories` VALUES (1,0),(2,1);
+          CREATE TABLE `last_viewed_products` (`id` int(11), `session_id` varchar(64), `product_id` int(11)) ENGINE=InnoDB;
+          INSERT INTO `last_viewed_products` VALUES (1,'sess-abc',1);
+          CREATE TABLE `favourite_products` (`id` int(11), `user_id` int(11)) ENGINE=InnoDB;
+          INSERT INTO `favourite_products` VALUES (1,7);
+          CREATE TABLE `product_quantities` (`id` int(12), `product_id` int(12), `size` int(3), `quantity` int(8)) ENGINE=InnoDB;
+          INSERT INTO `product_quantities` VALUES
+          (1,1,1,4),
+          (2,1,2,7),
+          (3,2,1,0),
+          (4,2,2,11),
+          (5,2,3,3);
+          CREATE TABLE `orders` (`id` int(11), `customer_email` varchar(255), `total` varchar(20)) ENGINE=InnoDB;
+          INSERT INTO `orders` VALUES
+          (1,'kupuvach@example.com','120.00'),
+          (2,'vtori.klient@example.com','89.90');
+          CREATE TABLE `settings` (`id` int(11), `name` varchar(64), `value` varchar(255)) ENGINE=InnoDB;
+          INSERT INTO `settings` VALUES (1,'currency','BGN');
+          INSERT INTO `settings` VALUES
+          (2,'contact','magazin.klient@example.com');
+          '@ | Set-Content "$src\db\dump.sql" -Encoding UTF8
+
+          '<?php define("DB_PASSWORD", "hunter2super"); $smtp_pass = "s3cr3tmailpw";' |
+            Set-Content "$src\config.php" -Encoding UTF8
+          '<?php // reset flow' | Set-Content "$src\includes\password_reset.php" -Encoding UTF8
+          '<?php function econt_send($o) { return true; }' | Set-Content "$src\api\econt.php" -Encoding UTF8
+          '<?php class PHPMailer { }' | Set-Content "$src\vendor\phpmailer\class.phpmailer.php" -Encoding UTF8
+          'body { color: #1a1a1a; font-family: Arial, sans-serif; }' | Set-Content "$src\css\style.css" -Encoding UTF8
+          '<urlset><url><loc>https://example.com/</loc></url></urlset>' | Set-Content "$src\sitemap.xml" -Encoding UTF8
+
+          & .\tools\legacy\Export-LegacyPackage.ps1 -SourcePath $src -OutPath $out
+          $code = $LASTEXITCODE
+          if ($code -ne 0) { Write-Host "::error::script exited $code - the final scan did not pass on a clean fixture"; exit 1 }
+
+          function Fail($m) { Write-Host "::error::$m"; $script:failed = $true }
+          $script:failed = $false
+
+          $schema = Get-Content "$out\db\schema.sql" -Raw
+          if ($schema -notmatch 'CREATE TABLE')      { Fail 'schema.sql has no CREATE TABLE' }
+          if ($schema -match 'INSERT\s+INTO')        { Fail 'schema.sql contains an INSERT' }
+
+          $catalog = Get-Content "$out\db\catalog_data.sql" -Raw
+          if ($catalog -notmatch 'products')          { Fail 'catalog_data.sql is missing products' }
+          if ($catalog -match 'last_viewed_products') { Fail 'catalog_data.sql leaked last_viewed_products' }
+          if ($catalog -match 'favourite_products')   { Fail 'catalog_data.sql leaked favourite_products' }
+          if ($catalog -match 'INSERT INTO `users`')  { Fail 'catalog_data.sql leaked users' }
+          if ($catalog -notmatch 'categories')        { Fail 'categories was denied - the deny list is over-matching' }
+          
+          # Regression: an INSERT whose values sit on continuation lines. The first
+          # parser matched only the header, so it wrote headers with no rows and
+          # counted statements instead of rows.
+          if ($catalog -notmatch '\(1,1,1,4\)')       { Fail 'catalog_data.sql has INSERT headers but no row values' }
+          if ($catalog -notmatch '\(5,2,3,3\)')       { Fail 'catalog_data.sql dropped the last row of a multi-line INSERT' }
+          if ($catalog -match 'kupuvach@example\.com') { Fail 'a denied multi-line INSERT leaked its continuation lines' }
+          # settings passes the scan on its first statement and fails on its second.
+          # Both must be gone, not just the one that tripped it.
+          if ($catalog -match 'magazin\.klient@example\.com') { Fail 'a PII row survived in catalog_data.sql' }
+          if ($catalog -match "'currency'")                   { Fail 'the clean statement of a PII-blocked table was not purged' }
+
+          $counts = Get-Content "$out\db\table_counts.txt" -Raw
+          foreach ($t in 'users','products','last_viewed_products','favourite_products') {
+            if ($counts -notmatch [regex]::Escape($t)) { Fail "table_counts.txt is missing $t" }
+          }
+          if ($counts -notmatch 'product_quantities\s+5') { Fail 'multi-line INSERT rows were counted as statements, not rows' }
+          if ($counts -notmatch 'orders\s+2')             { Fail 'a denied multi-line INSERT was miscounted' }
+
+          $leaks = @(Get-ChildItem $out -Recurse -File | Where-Object {
+            (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match 'ivan\.petrov@|kupuvach@|vtori\.klient@|magazin\.klient@'
+          })
+          if ($leaks.Count -gt 0) { Fail "customer email reached the output: $($leaks[0].FullName)" }
+
+          $secrets = @(Get-ChildItem $out -Recurse -File | Where-Object {
+            (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match 'hunter2super|s3cr3tmailpw'
+          })
+          if ($secrets.Count -gt 0) { Fail "a credential reached the output: $($secrets[0].FullName)" }
+
+          if (Test-Path "$out\code\includes\password_reset.php") { Fail 'password_reset.php was copied verbatim' }
+          if (Test-Path "$out\code\api\econt.php")               { Fail 'api/econt.php was copied verbatim' }
+          if (@(Get-ChildItem "$out\code" -Recurse -File -Filter '*phpmailer*').Count -gt 0) { Fail 'vendor code was copied' }
+          if (@(Get-ChildItem "$out\code-summaries" -File -Filter '*password_reset*').Count -eq 0) { Fail 'no summary written for password_reset.php' }
+          if (-not (Test-Path "$out\urls\sitemap.xml")) { Fail 'sitemap was not copied' }
+          if (Test-Path "$out\FLAGGED-DO-NOT-UPLOAD.txt") { Fail 'the fixture produced a flagged package' }
+
+          if ($script:failed) { exit 1 }
+          Write-Host "smoke test passed - denied tables held, credentials blanked, sensitive flows summarised"

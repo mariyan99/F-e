@@ -1,0 +1,26 @@
+﻿    18  'Glyphicons Halflings'
+    18  inherit
+    13  Arial,Helvetica,sans-serif
+     9  serif
+     9  sans-serif
+     9  monospace,monospace
+     9  'flexslider-icon'
+     9  Menlo,Monaco,Consolas,
+     8  var(--font-display)
+     8  'ecoicon'
+     8  'FontAwesome'
+     5  arial,sans-serif
+     4  'lg'
+     2  'codropsicons'
+     2  Cormac
+     2  var(--font-main)
+     2  tahoma,verdana,sans-serif
+     2  arial, sans-serif
+     2  var(--font-main) !important
+     1  Cambria, Palatino,
+     1  Verdana, Arial, Helvetica, sans-serif
+     1  Georgia
+     1  'Ovo', serif
+     1  'Alegreya SC', Georgia, serif
+     1  monospace
+     1  'Lato', Calibri, Arial, sans-serif

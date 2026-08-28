@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens are set at runtime from the active Theme record (see
+ * src/lib/theme.ts). The values below are only the fallback used before any
+ * theme exists. Nothing in a component may hard-code a colour — a literal is
+ * a component that ignores the season switch.
+ */
+:root {
+  --brand-ink: #17141b;
+  --brand-paper: #fbfafc;
+  --brand-accent: #7c3e56;
+  --brand-muted: #6b6474;
+  --brand-sale: #9b3b33;
+  --brand-rule: #e2dde7;
+  --radius: 0px;
+  --type-scale: 1;
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-serif: ui-serif, Georgia, "Times New Roman", serif;
+  --font-display: var(--font-sans);
+}
+
+@theme inline {
+  --color-ink: var(--brand-ink);
+  --color-paper: var(--brand-paper);
+  --color-accent: var(--brand-accent);
+  --color-muted: var(--brand-muted);
+  --color-sale: var(--brand-sale);
+  --color-rule: var(--brand-rule);
+  --font-display: var(--font-display);
+  --radius-brand: var(--radius);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--brand-paper);
+    color: var(--brand-ink);
+    font-family: var(--font-sans);
+    font-size: calc(1rem * var(--type-scale));
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Keyboard users must always be able to see where they are. */
+  :focus-visible {
+    outline: 2px solid var(--brand-accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility label-caps {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
