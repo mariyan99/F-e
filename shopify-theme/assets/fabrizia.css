@@ -6,9 +6,11 @@
 
 :root {
   --fabrizia-accent: #a8007a;
+  --fabrizia-accent-deep: #4b0039;
+  --fabrizia-accent-soft: #f5e5f0;
   --fabrizia-ink: #111111;
   --fabrizia-muted: #6f6f6f;
-  --fabrizia-rule: #e6e2df;
+  --fabrizia-rule: #ead7e7;
   --fabrizia-paper: #ffffff;
 }
 
@@ -25,6 +27,7 @@ header-component,
 .header {
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  border-bottom: 1px solid color-mix(in srgb, var(--fabrizia-accent) 18%, transparent);
 }
 
 .header a,
@@ -46,6 +49,151 @@ button,
 button:hover,
 .shopify-payment-button__button:hover {
   opacity: 0.86;
+}
+
+.button,
+.button-custom,
+.shopify-payment-button__button {
+  background-color: var(--fabrizia-accent);
+  border-color: var(--fabrizia-accent);
+  color: #ffffff;
+}
+
+.button-secondary,
+.link,
+.header a:hover,
+.menu-list__link:hover {
+  color: var(--fabrizia-accent);
+}
+
+.header-actions__wishlist {
+  min-width: var(--minimum-touch-target);
+  min-height: var(--minimum-touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  text-decoration: none;
+}
+
+.header-actions__wishlist-icon svg {
+  width: 20px;
+  height: 20px;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.header-actions__wishlist:hover .header-actions__wishlist-icon svg {
+  color: var(--fabrizia-accent);
+  transform: translateY(-1px);
+}
+
+.fabrizia-campaign-preview {
+  display: grid;
+  gap: 28px;
+}
+
+.fabrizia-campaign-preview__intro {
+  display: grid;
+  gap: 8px;
+  max-width: 720px;
+}
+
+.fabrizia-kicker,
+.fabrizia-campaign-preview__eyebrow,
+.fabrizia-look-card__label {
+  color: var(--fabrizia-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fabrizia-campaign-preview__intro h2 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 54px);
+  line-height: 0.96;
+}
+
+.fabrizia-campaign-preview__intro p {
+  margin: 0;
+  color: var(--fabrizia-muted);
+  max-width: 620px;
+}
+
+.fabrizia-look-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fabrizia-look-card {
+  min-height: 420px;
+  display: flex;
+  align-items: flex-end;
+  padding: 22px;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(75, 0, 57, 0.08), rgba(18, 0, 14, 0.76)),
+    var(--look-color, var(--fabrizia-accent-deep));
+  overflow: hidden;
+  position: relative;
+}
+
+.fabrizia-look-card::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  pointer-events: none;
+}
+
+.fabrizia-look-card__content {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  z-index: 1;
+}
+
+.fabrizia-look-card h3,
+.fabrizia-look-card p {
+  margin: 0;
+}
+
+.fabrizia-look-card h3 {
+  font-size: clamp(22px, 2.2vw, 34px);
+  line-height: 1;
+}
+
+.fabrizia-look-card p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.fabrizia-service-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: 1px solid var(--fabrizia-rule);
+}
+
+.fabrizia-service-strip__item {
+  padding: 18px 16px;
+  border-inline-end: 1px solid var(--fabrizia-rule);
+}
+
+.fabrizia-service-strip__item:last-child {
+  border-inline-end: 0;
+}
+
+.fabrizia-service-strip strong {
+  display: block;
+  color: var(--fabrizia-ink);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fabrizia-service-strip span {
+  color: var(--fabrizia-muted);
+  font-size: 13px;
 }
 
 .product-card,
@@ -113,5 +261,25 @@ textarea:focus-visible {
   .page-width-wide,
   .page-width-content {
     --page-margin: 32px;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .fabrizia-look-grid,
+  .fabrizia-service-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .fabrizia-look-card {
+    min-height: 320px;
+  }
+
+  .fabrizia-service-strip__item {
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--fabrizia-rule);
+  }
+
+  .fabrizia-service-strip__item:last-child {
+    border-block-end: 0;
   }
 }

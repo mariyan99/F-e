@@ -54,14 +54,14 @@
     "badge_sold_out_background_color": "#eef1ea",
     "badge_sold_out_text_color": "{{ settings.color_palette.foreground }}",
     "badge_text_transform": "none",
-    "palette_primary_button_background": "{{ settings.color_palette.foreground }}",
+    "palette_primary_button_background": "#a8007a",
     "palette_primary_button_text": "{{ settings.color_palette.background }}",
-    "palette_primary_button_border": "{{ settings.color_palette.foreground }}",
+    "palette_primary_button_border": "#a8007a",
     "primary_button_border_width": 0,
     "button_border_radius_primary": 0,
     "palette_secondary_button_background": "rgba(0,0,0,0)",
-    "palette_secondary_button_text": "{{ settings.color_palette.foreground }}",
-    "palette_secondary_button_border": "{{ settings.color_palette.foreground }}",
+    "palette_secondary_button_text": "#a8007a",
+    "palette_secondary_button_border": "#a8007a",
     "secondary_button_border_width": 1,
     "button_border_radius_secondary": 0,
     "cart_type": "drawer",
@@ -105,8 +105,8 @@
     "color_palette": {
       "background": "#ffffff",
       "foreground": "#111111",
-      "color1": "#6f6f6f",
-      "color2": "#e6e2df"
+      "color1": "#6f2a5c",
+      "color2": "#ead7e7"
     }
   },
   "presets": {

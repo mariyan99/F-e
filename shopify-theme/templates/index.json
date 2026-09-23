@@ -15,7 +15,7 @@
           "type": "text",
           "name": "t:names.heading",
           "settings": {
-            "text": "<p>FABRIZIA</p><p>Нова селекция за ежедневна елегантност</p>",
+            "text": "<p>FABRIZIA</p><p>???? ???????? ?? ????????? ???????????</p>",
             "text_color": "{{ settings.color_palette.background }}",
             "width": "fit-content",
             "max_width": "normal",
@@ -41,7 +41,7 @@
           "type": "button",
           "name": "t:names.button",
           "settings": {
-            "label": "Разгледай колекцията",
+            "label": "????????? ??????????",
             "link": "shopify://collections/all",
             "open_in_new_tab": false,
             "style_class": "button-custom",
@@ -80,9 +80,9 @@
         "section_width": "page-width",
         "section_height": "medium",
         "section_height_custom": 50,
-        "background_color": "rgba(0,0,0,0)",
+        "background_color": "#4b0039",
         "toggle_overlay": true,
-        "overlay_color": "#11111159",
+        "overlay_color": "#4b00398c",
         "overlay_style": "solid",
         "gradient_direction": "to bottom",
         "blurred_reflection": false,
@@ -130,7 +130,7 @@
               "type": "_product-list-text",
               "name": "t:names.collection_title",
               "settings": {
-                "text": "<h3>Нови предложения</h3>",
+                "text": "<h3>???? ???????????</h3>",
                 "width": "fit-content",
                 "max_width": "normal",
                 "alignment": "left",
@@ -154,7 +154,7 @@
               "type": "_product-list-button",
               "name": "t:names.product_list_button",
               "settings": {
-                "label": "Виж всички",
+                "label": "??? ??????",
                 "open_in_new_tab": false,
                 "style_class": "link",
                 "width": "fit-content",
@@ -276,10 +276,22 @@
         "padding-block-start": 64,
         "padding-block-end": 72
       }
+    },
+    "fabrizia_campaign_ready": {
+      "type": "custom-liquid",
+      "name": "Fabrizia campaign preview",
+      "settings": {
+        "custom_liquid": "<div id=\"fabrizia-wishlist\" class=\"fabrizia-campaign-preview\"><div class=\"fabrizia-campaign-preview__intro\"><span class=\"fabrizia-campaign-preview__eyebrow\">Fabrizia selection</span><h2>?????? ????? ?? ??????, ????? ? ????????? ????</h2><p>?????????? ????? ?? ??????? ????????: hero, editorial cards, ?????????? ??????? ? ???? ????? ?? ?????? ????????.</p></div><div class=\"fabrizia-look-grid\"><article class=\"fabrizia-look-card\" style=\"--look-color:#4b0039\"><div class=\"fabrizia-look-card__content\"><span class=\"fabrizia-look-card__label\">Look 01</span><h3>Evening edit</h3><p>????? ? ?????? ? ??-????? ??????.</p></div></article><article class=\"fabrizia-look-card\" style=\"--look-color:#7c005f\"><div class=\"fabrizia-look-card__content\"><span class=\"fabrizia-look-card__label\">Look 02</span><h3>Daily polish</h3><p>????????? ?????? ?? ??????? ???.</p></div></article><article class=\"fabrizia-look-card\" style=\"--look-color:#a8007a\"><div class=\"fabrizia-look-card__content\"><span class=\"fabrizia-look-card__label\">Look 03</span><h3>New campaign</h3><p>?????? ???? ?? ??????? ?????? ? ????????.</p></div></article></div><div class=\"fabrizia-service-strip\"><div class=\"fabrizia-service-strip__item\"><strong>???????? ? ?????</strong><span>?? ???? ??? ????? ? ????????.</span></div><div class=\"fabrizia-service-strip__item\"><strong>??????? ??????</strong><span>??????? ??? ??????????.</span></div><div class=\"fabrizia-service-strip__item\"><strong>?????? ????????</strong><span>????? ? ??????????? ?? wishlist ????.</span></div></div></div>",
+        "background_color": "#ffffff",
+        "section_width": "page-width",
+        "padding-block-start": 64,
+        "padding-block-end": 64
+      }
     }
   },
   "order": [
     "hero_jVaWmY",
+    "fabrizia_campaign_ready",
     "product_list_fa6P9H"
   ]
 }

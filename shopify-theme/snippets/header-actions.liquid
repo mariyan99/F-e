@@ -57,6 +57,15 @@
   </svg>
 {% endcapture %}
 
+{% capture wishlist_icon %}
+  <span
+    class="svg-wrapper header-actions__wishlist-icon"
+    aria-hidden="true"
+  >
+    {{ 'icon-heart.svg' | inline_asset_content }}
+  </span>
+{% endcapture %}
+
 <header-actions
   {% if display_style == 'text' %}
     class="header-actions--text"
@@ -112,6 +121,21 @@
       </shopify-account>
     </div>
   {% endif %}
+
+  <a
+    href="#fabrizia-wishlist"
+    class="header-actions__action header-actions__wishlist"
+    aria-label="Любими продукти"
+    title="Любими продукти"
+  >
+    <span class="{% if display_style == 'icon' %}hidden{% else %}mobile:hidden{% endif %} header-actions__text-style">
+      Любими
+    </span>
+
+    <span class="{% if display_style != 'icon' %}desktop:hidden{% endif %}">
+      {{ wishlist_icon }}
+    </span>
+  </a>
 
   {% if settings.cart_type == 'drawer' and template.name != 'cart' %}
     <button
