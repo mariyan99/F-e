@@ -135,6 +135,12 @@
     <span class="{% if display_style != 'icon' %}desktop:hidden{% endif %}">
       {{ wishlist_icon }}
     </span>
+
+    <span
+      class="fabrizia-wishlist-count"
+      data-fabrizia-wishlist-count
+      hidden
+    ></span>
   </a>
 
   {% if settings.cart_type == 'drawer' and template.name != 'cart' %}
