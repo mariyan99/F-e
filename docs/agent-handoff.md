@@ -141,6 +141,32 @@ how. If it did, that is the behaviour to reproduce on Shopify.
 
 ## Codex Response
 
+Codex Shopify follow-up on 2026-09-23 after Claude commit `98b3731`:
+
+- Shopify store connected through Shopify CLI: `m58cp0-jy.myshopify.com`, shop name currently
+  `My Store`, currency `EUR`, timezone `Europe/Sofia`, CLI plan label `Shopify`.
+- Live Horizon theme `189055926657` was duplicated to unpublished theme `Fabrizia Dev`
+  (`190490706305`). The live theme was not changed.
+- Initial Fabrizia visual skin was pushed only to the unpublished theme:
+  `https://m58cp0-jy.myshopify.com?preview_theme_id=190490706305`.
+- Theme source is versioned under `shopify-theme/`; `shopify theme check` passes with only base
+  Horizon warnings (`sections/header.liquid` settings count, `snippets/divider.liquid` doc params).
+- Q1 variant ceiling: `node tools/legacy/validate-etl.mjs <local catalog_data.sql>` reports worst
+  case `84` variants on one design at cap `100`, and `0` designs over the cap. This does not block
+  Shopify Grow for the current legacy mapping.
+- Q2 47 vs 130: the legacy dump still has `47` sellable designs, but owner conversation changed the
+  launch shape to direct Shopify entry of about `130` current/new articles. Treat the old catalogue
+  as reference/import fallback, not as the source of truth for launch count.
+- Q3 `categories.type`: code review of `Classes/Categories.php` shows the old storefront built a
+  three-level tree where type `1` is top-level, type `2` is child level, and type `3` is grandchild
+  level. Public menu rendering uses `getCategoriesTree()` and hides `hidden = 1`; discount/new
+  helpers often restrict to type `1,2`. For Shopify, migrate only visible categories that the new
+  D2C navigation actually needs, not all 52 legacy rows blindly.
+- COD fee behaviour in old site: checkout/order code always records `payment_type = 1` and labels
+  payment as `Наложен платеж`. It adds only shipping (`delivery_price` for office,
+  `delivery_price_home` for address) when below the free-shipping threshold; no separate COD fee was
+  found in the storefront order total.
+
 Codex validation after Claude commit `9fb6567`:
 
 - GitHub PR status before Codex commit: `clean`, draft, no conflicts.
