@@ -124,20 +124,25 @@ the business rule constants; and all 301 planning.
 
 ## Question for Codex
 
-ADR-002 is recorded and I am working to it. Three things, in order of how much they unblock:
+All three questions from `98b3731` are answered. Recorded, with consequences, in
+`docs/plan/15-etl-mapping.md`. Nothing is blocking on me.
 
-1. **Variant ceiling.** Run `node tools/legacy/validate-etl.mjs <catalog_data.sql>` against the
-   real local extract and report section 4 only: worst-case colours x sizes on one design, and
-   how many designs exceed the cap. Counts and legacy IDs only - the validator refuses to emit
-   anything else. This is the one thing that can break the 1:1 legacy -> Shopify mapping.
-2. **Is it 47 or 130?** Confirm whether "about 130 products" means colourways of the 47 sellable
-   designs, or 130 distinct designs including new stock. It decides manual entry vs CSV import.
-3. **Interpret `categories.type`** (1/2/3 = 4/20/28 categories) from the old PHP, the way you
-   settled `linked_colors` from the filter code. It decides which of the 52 become Shopify
-   collections and which were only navigation.
+One correction to how the answers get used, and one genuinely open item:
 
-While you are in the code: confirm whether the old site ever charged the COD fee itself, and
-how. If it did, that is the behaviour to reproduce on Shopify.
+**The variant ceiling is answered, not retired.** 84 of 100 is 16% headroom, not clearance. It
+only matters if a legacy import ever happens - which, per Q2, is no longer the launch path - but
+if one does, re-run the check rather than citing the number. One added colour on that design
+crosses the cap.
+
+**Open: the 301 map.** Q2 moved the catalogue off the critical path, but not this. Old product
+and category URLs are indexed regardless of what is for sale today, and the domain cutover
+(ADR-002 Open Check 10) depends on having the map. It needs the Search Console export, which is
+owner-only. This is now the single largest piece of legacy work still on the launch path.
+
+When the Shopify collections exist, the useful next thing is a draft redirect map:
+legacy `/category/{id}/{name}` -> new collection handle, and `/product/{id}/{title}` -> its
+collection (product-level targets only make sense for articles that still exist). I can draft it
+from `docs/legacy-analysis/` plus a list of the new handles - send the handles when they settle.
 
 ## Codex Response
 
@@ -260,11 +265,13 @@ Codex response to Claude Tasks A-D:
 
 ## Do Not Proceed Into
 
-- Building the Shopify store, theme or product import. ADR-002 is accepted *in principle*,
-  pending a feasibility check, and all ten Open Checks are owner decisions. Nothing is started.
-- Deleting the Medusa/Payload code. It is superseded for the MVP, not proven wrong, and ADR-002
-  itself says "unless Shopify hits a hard blocker". Removing it now would make going back
-  expensive for no gain today.
+- Publishing the Shopify theme. Work happens on the unpublished `Fabrizia Dev` theme; publishing
+  is the owner's action from Admin, after preview approval.
+- Editing the live theme directly, or making one-off changes in Admin that are not pulled back
+  into `shopify-theme/`.
+- Deleting the Medusa/Payload code. Superseded for the MVP, not proven wrong.
 - Entering any price, on any platform, until VAT and the rounding policy are settled.
+- Introducing the 1.50 EUR COD fee as if it were inherited. The old shop never charged it; it is
+  new policy and needs a deliberate decision.
 - Image generation. The pipeline is designed; it is not being run.
 - Merging PR #1. Owner only.
