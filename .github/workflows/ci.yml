@@ -84,6 +84,35 @@ jobs:
       - name: Unit tests
         run: pnpm --filter @fabrizia/shared test
 
+      # The validator reads the legacy extract and must never echo product text
+      # back out. It guards that itself by refusing to emit a report containing
+      # Cyrillic; the fixture is deliberately full of Cyrillic, so a green run
+      # here proves the guard holds rather than that it was never exercised.
+      - name: ETL validator against a fixture
+        run: |
+          fail() { echo "::error::$1"; exit 1; }
+          report=$(node tools/legacy/validate-etl.mjs tools/legacy/fixtures/catalog_data.sql)
+          echo "$report"
+          grep -q 'split produced 6 products from 4 designs' <<<"$report" || fail 'split projection changed'
+          grep -q 'of those, with stock *4'                  <<<"$report" || fail 'sellable rule changed'
+          grep -q 'units offered after buffer  2 *19'        <<<"$report" || fail 'safety buffer not applied'
+          grep -q 'models REJECTED *1'                       <<<"$report" || fail '5-digit sku no longer rejected'
+          # The fixture is deliberately full of Cyrillic product text. None of it
+          # may reach the report. Asserted here independently of the validator's
+          # own guard, so removing that guard fails CI rather than passing quietly.
+          # grep -P cannot be trusted here: outside a UTF-8 locale it errors on these
+          # code points and an `if` reads that error as "no match", so the check
+          # passes while testing nothing. Node has no such ambiguity.
+          printf '%s' "$report" | node -e '
+            const s = require("fs").readFileSync(0, "utf8");
+            if (/[\u0400-\u04FF]/.test(s)) {
+              console.error("::error::product text leaked into the report");
+              process.exit(1);
+            }'
+          # The cap branch must actually fire, not merely exist.
+          VARIANT_CAP=5 node tools/legacy/validate-etl.mjs tools/legacy/fixtures/catalog_data.sql \
+            | grep -q 'designs over the cap *1' || fail 'variant cap check does not fire'
+
       - name: Migrate
         run: |
           pnpm --filter @fabrizia/backend migrate
