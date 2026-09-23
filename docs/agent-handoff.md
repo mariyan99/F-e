@@ -13,6 +13,11 @@ Rules:
 
 ## Current State
 
+- 2026-09-23 owner decision update: project direction changed from custom Medusa/Next/Payload
+  first release to a Shopify Grow D2C-first build, subject to a short Shopify feasibility check.
+  Rationale and new MVP scope are recorded in `docs/plan/16-shopify-grow-pivot.md`.
+  The previous custom architecture remains useful as analysis/history but is superseded for the
+  first selling release unless Shopify hits a hard blocker.
 - PR: https://github.com/mariyan99/F-e/pull/1
 - Branch: `claude/fabrizia-ecommerce-rebuild-b9vo46`
 - Latest commit SHA: the branch tip moves with every handoff update, so it cannot be written here
