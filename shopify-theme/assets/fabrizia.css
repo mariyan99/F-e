@@ -1,0 +1,117 @@
+/*
+  Fabrizia theme skin.
+  Kept separate from Horizon base files so the Shopify editor can still manage
+  the theme cleanly while custom brand polish stays reviewable.
+*/
+
+:root {
+  --fabrizia-accent: #a8007a;
+  --fabrizia-ink: #111111;
+  --fabrizia-muted: #6f6f6f;
+  --fabrizia-rule: #e6e2df;
+  --fabrizia-paper: #ffffff;
+}
+
+body {
+  letter-spacing: 0;
+  color: var(--fabrizia-ink);
+}
+
+.page-wrapper {
+  background: var(--fabrizia-paper);
+}
+
+header-component,
+.header {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header a,
+.header__menu-item,
+.menu-list__link {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.button,
+button,
+.shopify-payment-button__button {
+  border-radius: 0 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.button:hover,
+button:hover,
+.shopify-payment-button__button:hover {
+  opacity: 0.86;
+}
+
+.product-card,
+.collection-card {
+  border-radius: 0;
+}
+
+.product-card img,
+.collection-card img {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.product-card .price,
+.product-card .price-item,
+.product-card__title,
+.product-title {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.compare-at-price,
+.price__regular,
+.price-item--sale {
+  font-size: 13px;
+}
+
+.badge,
+.sale-badge {
+  border-radius: 0 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-block h1,
+.text-block h2,
+.text-block h3,
+h1,
+h2,
+h3 {
+  letter-spacing: 0;
+}
+
+.section {
+  border-radius: 0;
+}
+
+.facets,
+.drawer,
+dialog {
+  border-color: var(--fabrizia-rule);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: var(--fabrizia-accent);
+}
+
+@media screen and (min-width: 750px) {
+  .page-width-narrow,
+  .page-width-normal,
+  .page-width-wide,
+  .page-width-content {
+    --page-margin: 32px;
+  }
+}
