@@ -53,9 +53,92 @@ Rules:
   confirmation about VAT and the EUR rounding policy still block final price migration.
 - Next safest task: Claude updates `docs/plan/15-etl-mapping.md` to mark the split model confirmed, then writes a dry-run ETL validator that emits counts/mapping IDs only.
 
+## Claude's Read On ADR-002 (2026-09-23)
+
+I agree with the pivot and I am not arguing for the custom stack. What follows is what the
+legacy data says about it - one point in its favour that has not been written down, one hard
+check, and four blockers the ADR drops that do not actually go away.
+
+### The pivot removes more work than the ADR claims
+
+The hardest part of the custom plan was the split. Legacy holds colour *inside* the product
+(`product_quantities.color`, `product_photos.color`); ADR-001/O-3 demanded one product per
+colour, and the StyleGroup module existed only to glue the split back together. Q1-Q5 were
+asked entirely to settle it.
+
+Shopify's native model is one product with up to 3 options and a variant per combination.
+That is the legacy model. So `products.id` -> Shopify product, colour (`attr_id = 3`) ->
+Option1, size (`attr_id = 2`) -> Option2, one `product_quantities` row -> one variant. No
+split, no StyleGroup, no module links. The Q1-Q5 work is not wasted: it is the proof the
+mapping is 1:1.
+
+### The one hard feasibility check
+
+Per-product variant ceiling. The widest legacy design carries **24 distinct colours**; at ~5
+sizes that is ~120 combinations on a single product. Confirm the real cap for Grow. Any design
+over it has to be split by colour after all - the single case where the legacy model does not
+map cleanly. `tools/legacy/validate-etl.mjs` now counts this (`VARIANT_CAP`, default 100) and
+names the offending legacy IDs. Cheap to answer, and it belongs in Open Checks.
+
+### "About 130 products" does not match the data
+
+By the agreed rule (`status = 1` AND stock > 0) there are **47** sellable legacy designs, out
+of 3110 rows. 130 is consistent with 47 designs counted by colourway, but not with 130
+designs. Which it is decides Open Check 7:
+
+- **47 designs -> manual entry into Shopify is the right answer.** Faster than building a CSV
+  pipeline, and the owner learns the admin while doing it. That option is only sane because
+  the number is 47; at 3110 it would not be.
+- **130 new-season designs -> the old catalogue is mostly irrelevant** and the import question
+  changes shape entirely.
+
+### Four blockers the ADR drops that do not go away
+
+| | Why it still blocks |
+|---|---|
+| VAT inclusion, unconfirmed by the accountant | Shopify needs to know whether entered prices include tax. Wrong answer = whole catalogue off by 20%. |
+| BGN -> EUR rounding policy | 49.90 BGN = 25.51 EUR. More urgent on Shopify, not less: prices are typed in once, by hand. |
+| 301 map / Search Console export | Unchanged, and Open Check 10 (domain cutover) depends on it. |
+| Image aspect ratio | ADR-002 asks for 3:4 in MVP scope. 2 of 380 legacy images are 3:4. This is still the largest schedule risk in the project. |
+
+Also: "Orak can be absent from the first release" is fine operationally, but `Orak_Counters`
+shows the old system issued document numbers. Invoice numbering must not restart at 1. That is
+an accounting question that survives dropping the integration.
+
+### One Grow-specific constraint worth checking early
+
+COD as a manual payment method with a 1.50 EUR fee: Shopify manual payment methods do not add
+a fee natively. It usually needs an app or a COD-specific shipping rate that carries the fee.
+Worth confirming before it is promised in MVP scope.
+
+### What I would keep and what I would retire
+
+Retire from the MVP path: Medusa backend, Payload CMS, the StyleGroup module, the two-database
+design, `infra/` deploy scripts, Meilisearch.
+
+Keep, all still load-bearing: `docs/legacy-analysis/`; `tools/legacy/Export-LegacyPackage.ps1`
+(still the only safe way to get data off the old site); document 15 as a field mapping;
+`tools/legacy/validate-etl.mjs` (its output stage would emit a Shopify product CSV instead of
+a Medusa load - that is a change to the last step, not a rewrite); `14-design-direction.md`;
+the business rule constants; and all 301 planning.
+
 ## Question for Codex
 
-No pending Claude question. Codex answered Q1-Q9 after the `78dc1a8` export fix and reviewed the ETL shape. Claude should update `docs/plan/15-etl-mapping.md` to mark the split model confirmed, then the next safe task is a dry-run ETL validator that emits counts/mapping IDs only.
+ADR-002 is recorded and I am working to it. Three things, in order of how much they unblock:
+
+1. **Variant ceiling.** Run `node tools/legacy/validate-etl.mjs <catalog_data.sql>` against the
+   real local extract and report section 4 only: worst-case colours x sizes on one design, and
+   how many designs exceed the cap. Counts and legacy IDs only - the validator refuses to emit
+   anything else. This is the one thing that can break the 1:1 legacy -> Shopify mapping.
+2. **Is it 47 or 130?** Confirm whether "about 130 products" means colourways of the 47 sellable
+   designs, or 130 distinct designs including new stock. It decides manual entry vs CSV import.
+3. **Interpret `categories.type`** (1/2/3 = 4/20/28 categories) from the old PHP, the way you
+   settled `linked_colors` from the filter code. It decides which of the 52 become Shopify
+   collections and which were only navigation.
+
+While you are in the code: confirm whether the old site ever charged the COD fee itself, and
+how. If it did, that is the behaviour to reproduce on Shopify.
+
 ## Codex Response
 
 Codex validation after Claude commit `9fb6567`:
@@ -136,7 +219,10 @@ Codex response to Claude Tasks A-D:
 
 ## Owner Action Needed
 
-- Confirm with accountant whether old storefront/feed prices include VAT.
+- Confirm with accountant whether old storefront/feed prices include VAT. **Unchanged by
+  ADR-002** - Shopify needs this before a single price is entered.
+- Answer the ten Open Checks in `16-shopify-grow-pivot.md`. Every one of them is an owner
+  decision; none is waiting on Claude or Codex.
 - Decide the rounding policy after BGN -> EUR at 1.95583. 49.90 BGN becomes 25.51 EUR and the
   psychological price is gone. Whether the catalogue lands on 25.50, 25.90 or 24.90 is a
   commercial decision, applied once at import. Prices cannot be loaded until this is set.
@@ -148,16 +234,11 @@ Codex response to Claude Tasks A-D:
 
 ## Do Not Proceed Into
 
-- ETL implementation, until Q1-Q5 are answered. They decide whether the ETL splits one legacy
-  product into N products, which is the whole shape of it. Writing code before that answer means
-  writing it twice.
-- Loading any price, until VAT and the rounding policy are settled. A provisional price in
-  production is a wrong price.
-- Cart, checkout, payment or courier implementation, or any new launch scope.
+- Building the Shopify store, theme or product import. ADR-002 is accepted *in principle*,
+  pending a feasibility check, and all ten Open Checks are owner decisions. Nothing is started.
+- Deleting the Medusa/Payload code. It is superseded for the MVP, not proven wrong, and ADR-002
+  itself says "unless Shopify hits a hard blocker". Removing it now would make going back
+  expensive for no gain today.
+- Entering any price, on any platform, until VAT and the rounding policy are settled.
 - Image generation. The pipeline is designed; it is not being run.
-- Committing `catalog_data.sql` or any part of the package not on the Task A allowlist.
-- Storefront UI work against the visual direction. It is recorded in
-  `docs/plan/14-design-direction.md` as the standard, and deliberately not started: the six brand
-  tokens depend on `colors_used.txt`, which is Task C.
-- Upgrading Medusa, Next, Payload or Node. Dependencies are frozen until launch.
 - Merging PR #1. Owner only.
