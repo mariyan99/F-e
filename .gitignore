@@ -1,0 +1,31 @@
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+build/
+.next/
+.medusa/
+out/
+*.tsbuildinfo
+
+# env — never commit real values, only .env.example
+.env
+.env.*
+!.env.example
+
+# runtime
+uploads/
+media/
+*.log
+logs/
+.DS_Store
+
+# tooling
+.turbo/
+coverage/
+.vscode/
+.idea/
+
+# shared package test output
+.test-build/

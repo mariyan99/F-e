@@ -1,0 +1,89 @@
+# Production stack, Docker path.
+# Used when the host gives root and Docker. If it does not, see systemd/ — the
+# same six processes, provisioned from OS packages instead.
+#
+#   docker compose -f infra/deploy/docker-compose.prod.yml up -d
+
+name: fabrizia-prod
+
+services:
+  postgres:
+    image: postgres:16.10-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: fabrizia_commerce
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../init:/docker-entrypoint-initdb.d:ro
+      - ./backups:/backups
+    # Not published: only the application containers reach the database.
+    expose: ["5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d fabrizia_commerce"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command:
+      - postgres
+      # Write-ahead log archiving is what makes point-in-time recovery possible.
+      # A nightly dump alone loses everything since the dump.
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=test ! -f /backups/wal/%f && cp %p /backups/wal/%f
+      - -c
+      - max_wal_senders=3
+
+  valkey:
+    image: valkey/valkey:7.2-alpine
+    restart: always
+    command: ["valkey-server", "--save", "60", "1", "--appendonly", "yes"]
+    volumes:
+      - valkey-data:/data
+    expose: ["6379"]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.24
+    restart: always
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili-data:/meili_data
+    expose: ["7700"]
+
+  backend:
+    build:
+      context: ../..
+      dockerfile: infra/deploy/Dockerfile.backend
+    restart: always
+    env_file: [./.env.backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+      valkey: { condition: service_healthy }
+    ports: ["127.0.0.1:9000:9000"]
+
+  storefront:
+    build:
+      context: ../..
+      dockerfile: infra/deploy/Dockerfile.storefront
+    restart: always
+    env_file: [./.env.storefront]
+    depends_on:
+      postgres: { condition: service_healthy }
+    ports: ["127.0.0.1:8000:8000"]
+
+volumes:
+  postgres-data:
+  valkey-data:
+  meili-data:

@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+FROM node:22.22.2-bookworm-slim AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY apps/backend/package.json apps/backend/
+COPY apps/storefront/package.json apps/storefront/
+COPY packages/shared/package.json packages/shared/
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+FROM deps AS build
+COPY . .
+# next build needs the CMS database reachable to prerender; the publishable key
+# is intentionally not required (see apps/storefront/src/lib/medusa.ts).
+ARG DATABASE_URI
+ARG PAYLOAD_SECRET
+RUN pnpm --filter @fabrizia/shared build \
+ && pnpm --filter @fabrizia/storefront build
+
+FROM base AS runtime
+ENV NODE_ENV=production
+RUN useradd --system --create-home --uid 10001 fabrizia
+COPY --from=build --chown=fabrizia:fabrizia /app /app
+USER fabrizia
+WORKDIR /app/apps/storefront
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:8000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node_modules/.bin/next", "start", "-p", "8000"]

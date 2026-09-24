@@ -1,0 +1,464 @@
+/*
+  Fabrizia theme skin.
+  Kept separate from Horizon base files so the Shopify editor can still manage
+  the theme cleanly while custom brand polish stays reviewable.
+*/
+
+:root {
+  --fabrizia-accent: #7c005f;
+  --fabrizia-accent-deep: #2d001f;
+  --fabrizia-accent-soft: #f4eef3;
+  --fabrizia-ink: #111111;
+  --fabrizia-muted: #6f6f6f;
+  --fabrizia-rule: #e8e1e6;
+  --fabrizia-paper: #ffffff;
+}
+
+body {
+  letter-spacing: 0;
+  color: var(--fabrizia-ink);
+}
+
+.page-wrapper {
+  background: var(--fabrizia-paper);
+}
+
+header-component,
+.header {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #eeeeee;
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.header a,
+.header__menu-item,
+.menu-list__link {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.button,
+button,
+.shopify-payment-button__button {
+  border-radius: 0 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.button:hover,
+button:hover,
+.shopify-payment-button__button:hover {
+  opacity: 0.86;
+}
+
+.button,
+.button-custom,
+.shopify-payment-button__button {
+  background-color: var(--fabrizia-ink);
+  border-color: var(--fabrizia-ink);
+  color: #ffffff;
+}
+
+.button-secondary,
+.link,
+.header a:hover,
+.menu-list__link:hover {
+  color: var(--fabrizia-accent);
+}
+
+.header-actions__wishlist {
+  position: relative;
+  min-width: var(--minimum-touch-target);
+  min-height: var(--minimum-touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  text-decoration: none;
+}
+
+.header-actions__wishlist-icon svg {
+  width: 20px;
+  height: 20px;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.header-actions__wishlist:hover .header-actions__wishlist-icon svg {
+  color: var(--fabrizia-accent);
+  transform: translateY(-1px);
+}
+
+.fabrizia-wishlist-count {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding-inline: 4px;
+  border-radius: 999px;
+  background: var(--fabrizia-accent);
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.fabrizia-product-wishlist {
+  position: absolute;
+  z-index: 4;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(75, 0, 57, 0.14);
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--fabrizia-accent-deep);
+  box-shadow: 0 8px 24px rgba(75, 0, 57, 0.12);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.fabrizia-product-wishlist svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fabrizia-product-wishlist:hover,
+.fabrizia-product-wishlist.is-active {
+  background: var(--fabrizia-accent);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.fabrizia-product-wishlist.is-active svg {
+  fill: currentColor;
+}
+
+.fabrizia-campaign-preview {
+  display: grid;
+  gap: 40px;
+}
+
+.fabrizia-campaign-preview__intro,
+.fabrizia-editorial-lead {
+  display: grid;
+  gap: 14px;
+  max-width: 860px;
+}
+
+.fabrizia-kicker,
+.fabrizia-campaign-preview__eyebrow,
+.fabrizia-look-card__label {
+  color: var(--fabrizia-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fabrizia-campaign-preview__intro h2 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 72px);
+  line-height: 0.92;
+  letter-spacing: 0;
+}
+
+.fabrizia-campaign-preview__intro p,
+.fabrizia-editorial-lead p {
+  margin: 0;
+  color: var(--fabrizia-muted);
+  max-width: 680px;
+  font-size: 15px;
+}
+
+.fabrizia-look-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.85fr;
+  gap: 20px;
+}
+
+.fabrizia-look-card {
+  min-height: 500px;
+  display: flex;
+  align-items: flex-end;
+  padding: 28px;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(45, 0, 31, 0.04), rgba(18, 0, 14, 0.82)),
+    var(--look-color, var(--fabrizia-accent-deep));
+  overflow: hidden;
+  position: relative;
+}
+
+.fabrizia-look-card__content {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  z-index: 1;
+}
+
+.fabrizia-look-card h3,
+.fabrizia-look-card p {
+  margin: 0;
+}
+
+.fabrizia-look-card h3 {
+  font-size: clamp(26px, 3vw, 44px);
+  line-height: 1;
+}
+
+.fabrizia-look-card p {
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 240px;
+}
+
+.fabrizia-look-card--light {
+  color: var(--fabrizia-ink);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(124, 0, 95, 0.1)),
+    var(--fabrizia-accent-soft);
+}
+
+.fabrizia-look-card--light p {
+  color: var(--fabrizia-muted);
+}
+
+.fabrizia-look-card--outline {
+  color: var(--fabrizia-ink);
+  background: #ffffff;
+  border: 1px solid var(--fabrizia-rule);
+}
+
+.fabrizia-look-card--outline p {
+  color: var(--fabrizia-muted);
+}
+
+.fabrizia-service-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: 1px solid var(--fabrizia-rule);
+}
+
+.fabrizia-service-strip__item {
+  padding: 22px 0;
+  border-inline-end: 1px solid var(--fabrizia-rule);
+}
+
+.fabrizia-service-strip__item:last-child {
+  border-inline-end: 0;
+}
+
+.fabrizia-service-strip strong {
+  display: block;
+  color: var(--fabrizia-ink);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fabrizia-service-strip span {
+  color: var(--fabrizia-muted);
+  font-size: 13px;
+}
+
+.product-card,
+.collection-card {
+  border-radius: 0;
+}
+
+.product-card img,
+.collection-card img {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.product-card .price,
+.product-card .price-item,
+.product-card__title,
+.product-title {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.compare-at-price,
+.price__regular,
+.price-item--sale {
+  font-size: 12px;
+}
+
+.product-grid,
+.product-list {
+  row-gap: 42px;
+}
+
+.product-card__content {
+  gap: 6px !important;
+}
+
+.fabrizia-shipping-meter {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--fabrizia-rule);
+  background: #ffffff;
+}
+
+.fabrizia-shipping-meter__copy {
+  display: grid;
+  gap: 4px;
+}
+
+.fabrizia-shipping-meter__copy strong {
+  color: var(--fabrizia-ink);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fabrizia-shipping-meter__copy span {
+  color: var(--fabrizia-muted);
+  font-size: 12px;
+}
+
+.fabrizia-shipping-meter__track {
+  height: 4px;
+  background: #eee8ed;
+  overflow: hidden;
+}
+
+.fabrizia-shipping-meter__bar {
+  display: block;
+  width: var(--fabrizia-shipping-progress);
+  height: 100%;
+  background: var(--fabrizia-accent);
+  transition: width 220ms ease;
+}
+
+.badge,
+.sale-badge {
+  border-radius: 0 !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.text-block h1,
+.text-block h2,
+.text-block h3,
+h1,
+h2,
+h3 {
+  letter-spacing: 0;
+}
+
+.section {
+  border-radius: 0;
+}
+
+.facets,
+.drawer,
+dialog {
+  border-color: var(--fabrizia-rule);
+}
+
+.password-main-content {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(234, 215, 231, 0.18), transparent 32%),
+    linear-gradient(135deg, #4b0039 0%, #7b0f63 54%, #2b001f 100%);
+  color: #ffffff;
+}
+
+.password-main-content .section-background,
+.password-main-content .section {
+  background: transparent !important;
+}
+
+.password-main-content .logo-block,
+.password-main-content .text-block {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.password-main-content h1 {
+  color: #ffffff;
+  font-size: clamp(44px, 10vw, 108px);
+  line-height: 0.88;
+  letter-spacing: 0.08em;
+}
+
+.password-main-content p {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.password-main-content .email-signup__input-group {
+  margin-inline: auto;
+  max-width: 520px;
+}
+
+.password-main-content .field__input,
+.password-main-content input[type="email"] {
+  border-color: rgba(255, 255, 255, 0.34) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--fabrizia-accent-deep) !important;
+}
+
+.password-main-content .button,
+.password-dialog__submit-button {
+  background: #ffffff !important;
+  color: var(--fabrizia-accent-deep) !important;
+  border-color: #ffffff !important;
+}
+
+.password-footer {
+  background: #2b001f !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.password-footer__button {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline-color: var(--fabrizia-accent);
+}
+
+@media screen and (min-width: 750px) {
+  .page-width-narrow,
+  .page-width-normal,
+  .page-width-wide,
+  .page-width-content {
+    --page-margin: 32px;
+  }
+}
+
+@media screen and (max-width: 749px) {
+  .fabrizia-look-grid,
+  .fabrizia-service-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .fabrizia-look-card {
+    min-height: 320px;
+  }
+
+  .fabrizia-service-strip__item {
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--fabrizia-rule);
+  }
+
+  .fabrizia-service-strip__item:last-child {
+    border-block-end: 0;
+  }
+}

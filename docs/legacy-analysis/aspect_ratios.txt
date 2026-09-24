@@ -1,0 +1,6 @@
+﻿Aspect ratio distribution. Product photography must end up 3:4 = 0.750.
+
+   293  landscape
+    57  portrait narrower than 3:4
+    28  square
+     2  portrait 3:4 (target)
