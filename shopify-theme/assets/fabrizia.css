@@ -5,12 +5,12 @@
 */
 
 :root {
-  --fabrizia-accent: #a8007a;
-  --fabrizia-accent-deep: #4b0039;
-  --fabrizia-accent-soft: #f5e5f0;
+  --fabrizia-accent: #7c005f;
+  --fabrizia-accent-deep: #2d001f;
+  --fabrizia-accent-soft: #f4eef3;
   --fabrizia-ink: #111111;
   --fabrizia-muted: #6f6f6f;
-  --fabrizia-rule: #ead7e7;
+  --fabrizia-rule: #e8e1e6;
   --fabrizia-paper: #ffffff;
 }
 
@@ -25,9 +25,10 @@ body {
 
 header-component,
 .header {
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-bottom: 1px solid color-mix(in srgb, var(--fabrizia-accent) 18%, transparent);
+  border-bottom: 1px solid #eeeeee;
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .header a,
@@ -54,8 +55,8 @@ button:hover,
 .button,
 .button-custom,
 .shopify-payment-button__button {
-  background-color: var(--fabrizia-accent);
-  border-color: var(--fabrizia-accent);
+  background-color: var(--fabrizia-ink);
+  border-color: var(--fabrizia-ink);
   color: #ffffff;
 }
 
@@ -141,13 +142,14 @@ button:hover,
 
 .fabrizia-campaign-preview {
   display: grid;
-  gap: 28px;
+  gap: 40px;
 }
 
-.fabrizia-campaign-preview__intro {
+.fabrizia-campaign-preview__intro,
+.fabrizia-editorial-lead {
   display: grid;
-  gap: 8px;
-  max-width: 720px;
+  gap: 14px;
+  max-width: 860px;
 }
 
 .fabrizia-kicker,
@@ -162,41 +164,36 @@ button:hover,
 
 .fabrizia-campaign-preview__intro h2 {
   margin: 0;
-  font-size: clamp(30px, 4vw, 54px);
-  line-height: 0.96;
+  font-size: clamp(34px, 5vw, 72px);
+  line-height: 0.92;
+  letter-spacing: 0;
 }
 
-.fabrizia-campaign-preview__intro p {
+.fabrizia-campaign-preview__intro p,
+.fabrizia-editorial-lead p {
   margin: 0;
   color: var(--fabrizia-muted);
-  max-width: 620px;
+  max-width: 680px;
+  font-size: 15px;
 }
 
 .fabrizia-look-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: 1.15fr 1fr 0.85fr;
+  gap: 20px;
 }
 
 .fabrizia-look-card {
-  min-height: 420px;
+  min-height: 500px;
   display: flex;
   align-items: flex-end;
-  padding: 22px;
+  padding: 28px;
   color: #ffffff;
   background:
-    linear-gradient(180deg, rgba(75, 0, 57, 0.08), rgba(18, 0, 14, 0.76)),
+    linear-gradient(180deg, rgba(45, 0, 31, 0.04), rgba(18, 0, 14, 0.82)),
     var(--look-color, var(--fabrizia-accent-deep));
   overflow: hidden;
   position: relative;
-}
-
-.fabrizia-look-card::before {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  pointer-events: none;
 }
 
 .fabrizia-look-card__content {
@@ -212,12 +209,34 @@ button:hover,
 }
 
 .fabrizia-look-card h3 {
-  font-size: clamp(22px, 2.2vw, 34px);
+  font-size: clamp(26px, 3vw, 44px);
   line-height: 1;
 }
 
 .fabrizia-look-card p {
   color: rgba(255, 255, 255, 0.82);
+  max-width: 240px;
+}
+
+.fabrizia-look-card--light {
+  color: var(--fabrizia-ink);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(124, 0, 95, 0.1)),
+    var(--fabrizia-accent-soft);
+}
+
+.fabrizia-look-card--light p {
+  color: var(--fabrizia-muted);
+}
+
+.fabrizia-look-card--outline {
+  color: var(--fabrizia-ink);
+  background: #ffffff;
+  border: 1px solid var(--fabrizia-rule);
+}
+
+.fabrizia-look-card--outline p {
+  color: var(--fabrizia-muted);
 }
 
 .fabrizia-service-strip {
@@ -227,7 +246,7 @@ button:hover,
 }
 
 .fabrizia-service-strip__item {
-  padding: 18px 16px;
+  padding: 22px 0;
   border-inline-end: 1px solid var(--fabrizia-rule);
 }
 
@@ -263,14 +282,23 @@ button:hover,
 .product-card .price-item,
 .product-card__title,
 .product-title {
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0;
 }
 
 .compare-at-price,
 .price__regular,
 .price-item--sale {
-  font-size: 13px;
+  font-size: 12px;
+}
+
+.product-grid,
+.product-list {
+  row-gap: 42px;
+}
+
+.product-card__content {
+  gap: 6px !important;
 }
 
 .badge,
