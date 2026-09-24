@@ -1,0 +1,37 @@
+{%- liquid
+  assign free_shipping_threshold = threshold | default: 8900
+  assign cart_total = cart.total_price | default: 0
+  assign remaining = free_shipping_threshold | minus: cart_total
+  assign progress = cart_total | times: 100 | divided_by: free_shipping_threshold
+
+  if progress > 100
+    assign progress = 100
+  endif
+
+  if progress < 0
+    assign progress = 0
+  endif
+-%}
+
+<div
+  class="fabrizia-shipping-meter"
+  style="--fabrizia-shipping-progress: {{ progress }}%;"
+  role="status"
+  aria-live="polite"
+>
+  <div class="fabrizia-shipping-meter__copy">
+    {%- if cart_total >= free_shipping_threshold -%}
+      <strong>Безплатната доставка е активна.</strong>
+      <span>Завърши поръчката, докато избраните модели са налични.</span>
+    {%- else -%}
+      <strong>Остават {{ remaining | money }} до безплатна доставка.</strong>
+      <span>В количката: {{ cart_total | money }} / {{ free_shipping_threshold | money }}</span>
+    {%- endif -%}
+  </div>
+  <div
+    class="fabrizia-shipping-meter__track"
+    aria-hidden="true"
+  >
+    <span class="fabrizia-shipping-meter__bar"></span>
+  </div>
+</div>

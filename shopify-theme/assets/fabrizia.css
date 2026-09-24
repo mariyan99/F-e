@@ -301,6 +301,47 @@ button:hover,
   gap: 6px !important;
 }
 
+.fabrizia-shipping-meter {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--fabrizia-rule);
+  background: #ffffff;
+}
+
+.fabrizia-shipping-meter__copy {
+  display: grid;
+  gap: 4px;
+}
+
+.fabrizia-shipping-meter__copy strong {
+  color: var(--fabrizia-ink);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fabrizia-shipping-meter__copy span {
+  color: var(--fabrizia-muted);
+  font-size: 12px;
+}
+
+.fabrizia-shipping-meter__track {
+  height: 4px;
+  background: #eee8ed;
+  overflow: hidden;
+}
+
+.fabrizia-shipping-meter__bar {
+  display: block;
+  width: var(--fabrizia-shipping-progress);
+  height: 100%;
+  background: var(--fabrizia-accent);
+  transition: width 220ms ease;
+}
+
 .badge,
 .sale-badge {
   border-radius: 0 !important;
