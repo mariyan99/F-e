@@ -299,6 +299,64 @@ dialog {
   border-color: var(--fabrizia-rule);
 }
 
+.password-main-content {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(234, 215, 231, 0.18), transparent 32%),
+    linear-gradient(135deg, #4b0039 0%, #7b0f63 54%, #2b001f 100%);
+  color: #ffffff;
+}
+
+.password-main-content .section-background,
+.password-main-content .section {
+  background: transparent !important;
+}
+
+.password-main-content .logo-block,
+.password-main-content .text-block {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.password-main-content h1 {
+  color: #ffffff;
+  font-size: clamp(44px, 10vw, 108px);
+  line-height: 0.88;
+  letter-spacing: 0.08em;
+}
+
+.password-main-content p {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.password-main-content .email-signup__input-group {
+  margin-inline: auto;
+  max-width: 520px;
+}
+
+.password-main-content .field__input,
+.password-main-content input[type="email"] {
+  border-color: rgba(255, 255, 255, 0.34) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--fabrizia-accent-deep) !important;
+}
+
+.password-main-content .button,
+.password-dialog__submit-button {
+  background: #ffffff !important;
+  color: var(--fabrizia-accent-deep) !important;
+  border-color: #ffffff !important;
+}
+
+.password-footer {
+  background: #2b001f !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
+.password-footer__button {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
